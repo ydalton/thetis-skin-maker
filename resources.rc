@@ -1,0 +1,11 @@
+#include "resources.h"
+
+IDR_MAINMENU MENU
+BEGIN
+	POPUP "&Help"
+	BEGIN
+		MENUITEM "&About", IDM_HELP_ABOUT
+	END
+END
+
+1 RT_MANIFEST win32skinmaker.xml
