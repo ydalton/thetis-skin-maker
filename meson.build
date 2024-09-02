@@ -11,6 +11,7 @@ win32skinmaker_sources = files(
   'main.c',
   'window.c',
   'preview.c',
+  'image.c',
 )
 
 win32skinmaker_deps = [

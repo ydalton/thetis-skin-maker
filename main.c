@@ -2,23 +2,24 @@
 #include <windows.h>
 #include <shlwapi.h>
 #include <shellapi.h>
-#include <propidl.h>
-#include <gdiplus.h>
+
 
 #include "resources.h"
 #include "thetisskinmaker.h"
 
 #define CLASS_NAME "Win32SkinMakerClass"
 
+#include <stdio.h>
+
 BOOL
 ShouldContinue(void)
 {
   char expanded[MAX_PATH];
 
-  if(!ExpandEnvironmentStringsA(SKIN_FOLDER, expanded, MAX_PATH))
+  if(!ExpandEnvironmentStringsA(THETIS_SKIN_PATH, expanded, MAX_PATH))
     return FALSE;
 
-  if(!PathFileExistsA(SKIN_FOLDER))
+  if(!PathFileExistsA(expanded))
     return FALSE;
 
   return TRUE;
@@ -72,6 +73,7 @@ int WINAPI WinMain(HINSTANCE instance,
 		   int cmdShow)
 {
   WNDCLASS wc = {0};
+
 
   if(!ShouldContinue())
     {

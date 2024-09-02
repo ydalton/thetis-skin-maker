@@ -8,17 +8,18 @@
 #define WINDOW_WIDTH 450
 #define WINDOW_HEIGHT 500
 
-#if 0
-#define SKIN_FOLDER "%APPDATA%\\OpenHPSDR\\Skins\\"
-#else
-#define SKIN_FOLDER "%APPDATA%\\"
-#endif
+#define THETIS_SKIN_PATH "%APPDATA%\\OpenHPSDR\\Skins"
+#define THETIS_PICDISPLAY_PATH "Console\\picDisplay.png"
 
 #define SET_FONT(hwnd, font) \
   SendMessage(hwnd, WM_SETFONT, (WPARAM) font, MAKELPARAM(FALSE, 0))
 
 #define ERROR_BOX(text) \
-        MessageBox(NULL, text, WINDOW_NAME, MB_OK | MB_ICONERROR )
+  MessageBox(NULL, text, WINDOW_NAME, MB_OK | MB_ICONERROR )
+
+#define ERROR_BOX_WITH_CAPTION(text, caption) \
+  MessageBox(NULL, text, caption, MB_OK | MB_ICONERROR)
+
 #define CREATE_GROUPBOX(text, x, y, width, height, parent, instance) \
   CreateWindowEx(0, \
 		 WC_BUTTON, \
