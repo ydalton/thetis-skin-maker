@@ -1,13 +1,28 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <shlwapi.h>
 #include <shellapi.h>
 #include <propidl.h>
 #include <gdiplus.h>
 
 #include "resources.h"
-#include "common.h"
+#include "thetisskinmaker.h"
 
 #define CLASS_NAME "Win32SkinMakerClass"
+
+BOOL
+ShouldContinue(void)
+{
+  char expanded[MAX_PATH];
+
+  if(!ExpandEnvironmentStringsA(SKIN_FOLDER, expanded, MAX_PATH))
+    return FALSE;
+
+  if(!PathFileExistsA(SKIN_FOLDER))
+    return FALSE;
+
+  return TRUE;
+}
 
 static LRESULT CALLBACK
 WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
@@ -39,6 +54,9 @@ WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 	case IDC_IMAGE_BUTTON:
 	  OnImageButtonClick(hwnd);
 	  break;
+	case IDC_SAVE_BUTTON:
+	  OnSaveButtonClick(hwnd);
+	  break;
 	}
       break;
     default:
@@ -54,6 +72,15 @@ int WINAPI WinMain(HINSTANCE instance,
 		   int cmdShow)
 {
   WNDCLASS wc = {0};
+
+  if(!ShouldContinue())
+    {
+      MessageBox(NULL,
+		 "No skins were found. Is Thetis installed properly?",
+		 "Skins Not Found",
+		 MB_OK | MB_ICONERROR);
+      return -1;
+    }
 
   wc.hbrBackground = (HBRUSH) COLOR_WINDOW;
   wc.lpfnWndProc = WndProc;

@@ -2,7 +2,7 @@
 #include <windows.h>
 #include <commctrl.h>
 
-#include "common.h"
+#include "thetisskinmaker.h"
 
 #define CLASS_NAME "Win32ThetisSkinMakerPreview"
 

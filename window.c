@@ -4,9 +4,15 @@
 #include <commdlg.h>
 
 #include "resources.h"
-#include "common.h"
+#include "thetisskinmaker.h"
 
 HBITMAP imageBitmap;
+
+static void
+FillBaseSkinDropDown(HWND hwnd)
+{
+
+}
 
 static void
 CreateActionControls(HWND hwnd, HFONT font, HINSTANCE instance)
@@ -103,7 +109,9 @@ CreateBaseSkinControls(HWND hwnd, HFONT font, HINSTANCE instance)
 			    instance,
 			    NULL);
 
-  CHECK(comboBox)
+  CHECK(comboBox);
+
+  FillBaseSkinDropDown(comboBox);
 
   SET_FONT(groupBox, font);
   SET_FONT(comboBox, font);
@@ -195,6 +203,12 @@ OnImageButtonClick(HWND hwnd)
       ERROR_BOX("Failed to load image!");
       return;
     }
+}
+
+void
+OnSaveButtonClick(HWND hwnd)
+{
+
 }
 
 void

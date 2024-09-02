@@ -8,6 +8,12 @@
 #define WINDOW_WIDTH 450
 #define WINDOW_HEIGHT 500
 
+#if 0
+#define SKIN_FOLDER "%APPDATA%\\OpenHPSDR\\Skins\\"
+#else
+#define SKIN_FOLDER "%APPDATA%\\"
+#endif
+
 #define SET_FONT(hwnd, font) \
   SendMessage(hwnd, WM_SETFONT, (WPARAM) font, MAKELPARAM(FALSE, 0))
 
@@ -37,6 +43,7 @@ extern HBITMAP imageBitmap;
 
 void OnPreviewButtonClick(HWND hwnd);
 void OnImageButtonClick(HWND hwnd);
+void OnSaveButtonClick(HWND hwnd);
 void OnCreate(HWND hwnd);
 
 #endif
