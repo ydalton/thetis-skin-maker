@@ -1,201 +1,15 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#include <commctrl.h>
 #include <shellapi.h>
-#include <commdlg.h>
 #include <propidl.h>
 #include <gdiplus.h>
 
 #include "resources.h"
+#include "common.h"
 
 #define CLASS_NAME "Win32SkinMakerClass"
-#define WINDOW_NAME "ThetisSkinMaker"
 
-#define WINDOW_WIDTH 450
-#define WINDOW_HEIGHT 500
-
-#define SET_FONT(hwnd, font) \
-  SendMessage(hwnd, WM_SETFONT, (WPARAM) font, MAKELPARAM(FALSE, 0))
-
-#define ERROR_BOX(text) \
-        MessageBox(NULL, text, WINDOW_NAME, MB_OK | MB_ICONERROR )
-#define CREATE_GROUPBOX(text, x, y, width, height, parent, instance) \
-  CreateWindowEx(0, \
-		 WC_BUTTON, \
-		 text, \
-                 WS_CHILD | WS_VISIBLE | BS_GROUPBOX, \
-		 x, \
-		 y, \
-		 width, \
-		 height, \
-		 parent, \
-		 NULL, \
-		 instance, \
-		 NULL)
-
-#define CHECK(hwnd)			\
-  if(!hwnd) \
-    {\
-      ERROR_BOX("Failed to create " #hwnd "!");	\
-    }\
-
-HBITMAP bitmap;
-		 
-
-void
-CreateSkinNameControls(HWND hwnd, HFONT font, HINSTANCE instance)
-{
-  HWND edit, groupBox;
-
-  groupBox = CREATE_GROUPBOX("Skin name", 10, 4, WINDOW_WIDTH - 35, 50, hwnd, instance);
-
-  CHECK(groupBox)
-
-  edit = CreateWindowEx(0,
-			WC_EDIT,
-			"",
-			WS_BORDER | WS_CHILD | WS_VISIBLE,
-			20,
-			25,
-			WINDOW_WIDTH - 55,
-			20,
-			hwnd,
-			NULL,
-			instance,
-			NULL);
-
-  CHECK(edit)
-
-  SET_FONT(groupBox, font);
-  SET_FONT(edit, font);
-}
-
-void CreateBaseSkinControls(HWND hwnd, HFONT font, HINSTANCE instance)
-{
-  HWND comboBox, groupBox;
-
-  groupBox = CREATE_GROUPBOX("Base skin", 10, 55, WINDOW_WIDTH - 35, 50, hwnd, instance);
-
-  CHECK(groupBox)
-
-  comboBox = CreateWindowEx(0,
-			    WC_COMBOBOX,
-			    "",
-			    CBS_DROPDOWN | CBS_HASSTRINGS | WS_VISIBLE | WS_CHILD | WS_VSCROLL,
-			    20,
-			    75,
-			    WINDOW_WIDTH - 55,
-			    200,
-			    hwnd,
-			    NULL,
-			    instance,
-			    NULL);
-
-  CHECK(comboBox)
-
-  SET_FONT(groupBox, font);
-  SET_FONT(comboBox, font);
-}
-
-void
-CreateBackgroundImageControls(HWND hwnd, HFONT font, HINSTANCE instance)
-{
-  HWND groupBox, button, image;
-
-  groupBox = CREATE_GROUPBOX("Background image", 10, 105, WINDOW_WIDTH - 35, 70, hwnd, instance);
-
-  CHECK(groupBox)
-
-  button = CreateWindowEx(0,
-			  WC_BUTTON,
-			  "Select background image",
-			  WS_CHILD | WS_VISIBLE,
-			  20,
-			  125,
-			  WINDOW_WIDTH - 55,
-			  25,
-			  hwnd,
-			  (HMENU) IDC_IMAGE_BUTTON,
-			  instance,
-			  NULL);
-
-  CHECK(button)
-
-  image = CreateWindowEx(0,
-			 WC_STATIC,
-			 "",
-			 WS_CHILD | WS_VISIBLE | SS_BITMAP,
-			 20,
-			 160,
-			 WINDOW_WIDTH - 55,
-			 250,
-			 hwnd,
-			 (HMENU) IDC_IMAGE,
-			 instance,
-			 NULL);
-
-  CHECK(image)
-
-  SET_FONT(groupBox, font);
-  SET_FONT(button, font);
-}
-
-void
-OnCreate(HWND hwnd)
-{
-  HFONT font;
-  HINSTANCE instance;
-
-  instance = GetModuleHandle(NULL);
-  font = GetStockObject(DEFAULT_GUI_FONT);
-
-  CreateSkinNameControls(hwnd, font, instance);
-  CreateBaseSkinControls(hwnd, font, instance);
-  CreateBackgroundImageControls(hwnd, font, instance);
-}
-
-void
-OnImageButtonClick(HWND hwnd)
-{
-  HWND image;
-    
-  OPENFILENAME ofn = {0};
-  char fileName[MAX_PATH] = "";
-  ofn.lpstrFilter = "All Image files\0" "*.png;*.jpg;*.jpeg;*.bmp\0" "All\0*.*\0";
-  ofn.lpstrFile = fileName;
-  ofn.nMaxFile = MAX_PATH;
-  ofn.lStructSize = sizeof(OPENFILENAME);
-  ofn.hwndOwner = hwnd;
-  ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
-
-  if(!GetOpenFileName(&ofn))
-    {
-      return;
-    }
-
-  image = GetDlgItem(hwnd, IDC_IMAGE);
-
-  if(!image)
-    {
-      MessageBox(hwnd, "Failed to retrieve image control!", WINDOW_NAME, MB_OK | MB_ICONERROR);
-    }
-
-  bitmap = LoadImageA(NULL,
-		     fileName,
-		     IMAGE_BITMAP,
-		     0,
-		     0,
-		     LR_LOADFROMFILE);
-  if(!bitmap)
-    {
-      ERROR_BOX("Failed to load image!");
-      return;
-    }
-
-  SendMessage(image, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)bitmap);
-}
-
-LRESULT CALLBACK
+static LRESULT CALLBACK
 WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
   switch(msg)
@@ -204,7 +18,10 @@ WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
       OnCreate(hwnd);
       break;      
     case WM_DESTROY:
-      DeleteObject(bitmap);
+      if(imageBitmap)
+	{
+	  DeleteObject(imageBitmap);
+	}
       PostQuitMessage(0);
       break;
     case WM_COMMAND:
@@ -215,6 +32,9 @@ WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 		      WINDOW_NAME,
 		      "A program to create skins to be used by OpenHPSDR Thetis.",
 		      NULL);
+	  break;
+	case IDC_PREVIEW_BUTTON:
+	  OnPreviewButtonClick(hwnd);
 	  break;
 	case IDC_IMAGE_BUTTON:
 	  OnImageButtonClick(hwnd);

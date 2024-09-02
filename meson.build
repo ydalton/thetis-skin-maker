@@ -7,6 +7,8 @@ windows = import('windows')
 
 win32skinmaker_sources = files(
   'main.c',
+  'window.c',
+  'preview.c',
 )
 
 win32skinmaker_sources += windows.compile_resources('resources.rc')
