@@ -40,11 +40,22 @@
       ERROR_BOX("Failed to create " #hwnd "!");	\
     }\
 
+
 extern HBITMAP imageBitmap;
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 void OnPreviewButtonClick(HWND hwnd);
 void OnImageButtonClick(HWND hwnd);
 void OnSaveButtonClick(HWND hwnd);
 void OnCreate(HWND hwnd);
+
+HBITMAP CreateBitmapFromPath(const char *path);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

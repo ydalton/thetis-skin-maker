@@ -1,6 +1,6 @@
 project(
-  'win32skinmaker',
-  'c'
+  'ThetisSkinMaker',
+  ['c', 'cpp']
 )
 
 cc = meson.get_compiler('c')
@@ -11,11 +11,12 @@ win32skinmaker_sources = files(
   'main.c',
   'window.c',
   'preview.c',
-  'image.c',
+  'image.cpp',
 )
 
 win32skinmaker_deps = [
   cc.find_library('shlwapi'),
+  cc.find_library('gdiplus'),
 ]
 
 win32skinmaker_sources += windows.compile_resources('resources.rc')
