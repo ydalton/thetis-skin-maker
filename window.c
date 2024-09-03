@@ -16,6 +16,7 @@ HBITMAP imageBitmap;
 HWND g_editControl = NULL;
 HWND g_baseSkinDropDown = NULL;
 HWND g_previewButton = NULL;
+HWND g_progressBar = NULL;
 
 static BOOL
 FillBaseSkinDropDown(HWND hwnd)
@@ -64,6 +65,32 @@ FillBaseSkinDropDown(HWND hwnd)
 }
 
 static void
+CreateProgressControls(HWND hwnd, HFONT font, HINSTANCE instance)
+{
+  HWND groupBox;
+
+  groupBox = CREATE_GROUPBOX(L"Progress", 10, 210, WINDOW_WIDTH - 35, 50, hwnd, instance);
+
+  g_progressBar = CreateWindowExW(0,
+				  PROGRESS_CLASSW,
+				  L"",
+				  WS_VISIBLE | WS_CHILD,
+				  21,
+				  228,
+				  393,
+				  23,
+				  hwnd,
+				  NULL,
+				  instance,
+				  NULL);
+
+  CHECK(g_progressBar);
+
+  SET_FONT(groupBox, font);
+  SET_FONT(g_progressBar, font);
+}
+
+static void
 CreateActionControls(HWND hwnd, HFONT font, HINSTANCE instance)
 {
   HWND groupBox, saveButton, newButton;
@@ -101,6 +128,7 @@ CreateActionControls(HWND hwnd, HFONT font, HINSTANCE instance)
 			     NULL);
 
   CHECK(newButton);
+
 
   SET_FONT(groupBox, font);
   SET_FONT(saveButton, font);
@@ -299,7 +327,6 @@ CopyFolderRecursively(LPWSTR src, LPWSTR dest)
 void
 OnSaveButtonClick(HWND hwnd)
 {
-  HWND comboBox, edit;
   WCHAR expanded[MAX_PATH] = {0};
   WCHAR srcPath[MAX_PATH] = {0};
   WCHAR destPath[MAX_PATH] = {0};
@@ -342,24 +369,33 @@ OnSaveButtonClick(HWND hwnd)
       return;
     }
 
+  SendMessage(g_progressBar, PBM_SETPOS, (WPARAM) 33, 0);
+
   if(CopyFolderRecursively(srcPath, destPath))
     {
       ERROR_BOX(L"Failed to copy folder for skin. This should not happen.");
       return;
     }
 
+  /* set progress bar position */
+  SendMessage(g_progressBar, PBM_SETPOS, (WPARAM) 66, 0);
+
   _snwprintf(picdisplay, MAX_PATH, L"%s\\%s", destPath, THETIS_PICDISPLAY_PATH);
 
- if(SaveBitmapToFile(imageBitmap, picdisplay))
-   {
-     ERROR_BOX(L"Failed to save picdisplay file. Your skin is not complete.");
-     return;
-   }
+  if(SaveBitmapToFile(imageBitmap, picdisplay))
+    {
+      ERROR_BOX(L"Failed to save picdisplay file. Your skin is not complete.");
+      return;
+    }
+
+  SendMessage(g_progressBar, PBM_SETPOS, (WPARAM) 100, 0);
 
   MessageBoxW(NULL,
 	     L"Skin successfully saved! Please restart Thetis if it is already open.",
 	     L"Skin Saved",
 	     MB_OK | MB_ICONINFORMATION);
+
+  SendMessage(g_progressBar, PBM_SETPOS, (WPARAM) 0, 0);
 }
 
 void
@@ -390,4 +426,5 @@ OnCreate(HWND hwnd)
   CreateBaseSkinControls(hwnd, font, instance);
   CreateBackgroundImageControls(hwnd, font, instance);
   CreateActionControls(hwnd, font, instance);
+  CreateProgressControls(hwnd, font, instance);
 }
