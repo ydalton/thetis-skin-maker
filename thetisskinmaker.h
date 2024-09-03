@@ -43,19 +43,12 @@
 
 extern HBITMAP imageBitmap;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 void OnPreviewButtonClick(HWND hwnd);
 void OnImageButtonClick(HWND hwnd);
 void OnSaveButtonClick(HWND hwnd);
 void OnCreate(HWND hwnd);
 
 HBITMAP CreateBitmapFromPath(LPWSTR path);
-
-#ifdef __cplusplus
-}
-#endif
+int SaveBitmapToFile(HBITMAP bitmap, LPWSTR path);
 
 #endif
