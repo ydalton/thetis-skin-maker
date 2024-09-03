@@ -2,10 +2,10 @@
 #include <windows.h>
 #include <commctrl.h>
 
-#include <stdio.h>
 #include <assert.h>
 
 #include "thetisskinmaker.h"
+#include "resources.h"
 
 #define CLASS_NAME L"Win32ThetisSkinMakerPreview"
 
@@ -30,7 +30,7 @@ OnPreviewWindowCreate(HWND hwnd)
 			  bitmapWidth,
 			  bitmapHeight,
 			  hwnd,
-			  NULL,
+			  (HMENU) IDC_PREVIEW_STATIC_BITMAP,
 			  instance,
 			  NULL);
 
@@ -46,6 +46,22 @@ PreviewWndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
     {
     case WM_CREATE:
       OnPreviewWindowCreate(hwnd);
+      break;
+    case WM_SIZE:
+      {
+	HWND bitmapStatic;
+
+	bitmapStatic = GetDlgItem(hwnd, IDC_PREVIEW_STATIC_BITMAP);
+	assert(bitmapStatic != NULL);
+
+	SetWindowPos(bitmapStatic,
+		     NULL,
+		     0,
+		     0,
+		     LOWORD(lparam),
+		     HIWORD(lparam),
+		     0);
+      }
       break;
     default:
       return DefWindowProc(hwnd, msg, wparam, lparam);
@@ -72,6 +88,8 @@ OnPreviewButtonClick(HWND hwnd)
       return;
     }
 
+  /* the whole window needs to be repainted */
+  wc.style = CS_HREDRAW | CS_VREDRAW;
   wc.lpfnWndProc = PreviewWndProc;
   wc.lpszClassName = CLASS_NAME;
   wc.hbrBackground = (HBRUSH) COLOR_WINDOW;
@@ -80,8 +98,6 @@ OnPreviewButtonClick(HWND hwnd)
 
   float ratio = (float)IMAGE_WIDTH / bitmap.bmWidth;
   float new_height = ((float) bitmap.bmHeight) * ratio;
-
-  printf("%f %f", (float) IMAGE_WIDTH, new_height);
 
   rect.right = IMAGE_WIDTH;
   rect.bottom = (int) new_height;
@@ -95,7 +111,7 @@ OnPreviewButtonClick(HWND hwnd)
   previewWindow = CreateWindowExW(0,
 				  CLASS_NAME,
 				  L"Image preview",
-				  WS_OVERLAPPEDWINDOW & ~WS_SIZEBOX & ~WS_MAXIMIZEBOX,
+				  WS_OVERLAPPEDWINDOW,
 				  CW_USEDEFAULT,
 				  CW_USEDEFAULT,
 				  bitmapWidth,
