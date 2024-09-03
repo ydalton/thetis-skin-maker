@@ -10,42 +10,6 @@
 
 size_t bitmapWidth = 0, bitmapHeight = 0;
 
-static HBITMAP
-ResizeBitmap(HBITMAP hBitmap, int newWidth, int newHeight)
-{
-  HBITMAP hbmOldSource, hbmOldDest;
-  HBITMAP hbmNew;
-  HDC hdcSource, hdcDest;
-  BITMAP bm;
-
-  if(!GetObject(hBitmap, sizeof(BITMAP), &bm))
-    return NULL;
-
-  hdcSource = CreateCompatibleDC(NULL);
-  if(!hdcSource)
-    return NULL;
-
-  hdcDest = CreateCompatibleDC(hdcSource);
-  if(!hdcDest)
-    return NULL;
-
-  hbmNew = CreateCompatibleBitmap(hdcSource, newWidth, newHeight);
-  if(!hbmNew)
-    return NULL;
-
-  hbmOldSource = (HBITMAP)SelectObject(hdcSource, hBitmap);
-  hbmOldDest = (HBITMAP)SelectObject(hdcDest, hbmNew);
-
-  StretchBlt(hdcDest, 0, 0, newWidth, newHeight, hdcSource, 0, 0, bm.bmWidth, bm.bmHeight, SRCCOPY);
-
-  SelectObject(hdcSource, hbmOldSource);
-  SelectObject(hdcDest, hbmOldDest);
-  DeleteDC(hdcSource);
-  DeleteDC(hdcDest);
-
-  return hbmNew;
-}
-
 static void
 OnPreviewWindowCreate(HWND hwnd)
 {
@@ -58,7 +22,7 @@ OnPreviewWindowCreate(HWND hwnd)
   image = CreateWindowEx(0,
 			 WC_STATIC,
 			 "",
-			 WS_CHILD | WS_VISIBLE | SS_BITMAP,
+			 WS_CHILD | WS_VISIBLE | SS_BITMAP | SS_REALSIZECONTROL,
 			 0,
 			 0,
 			 bitmapWidth,
@@ -70,14 +34,7 @@ OnPreviewWindowCreate(HWND hwnd)
 
   CHECK(image);
 
-  resizedBitmap = ResizeBitmap(imageBitmap, bitmapWidth, bitmapHeight);
-  if(!resizedBitmap)
-    {
-      ERROR_BOX("Failed to resize bitmap!");
-      return;
-    }
-
-  SendMessage(image, STM_SETIMAGE, (WPARAM) IMAGE_BITMAP, (LPARAM) resizedBitmap);
+  SendMessage(image, STM_SETIMAGE, (WPARAM) IMAGE_BITMAP, (LPARAM) imageBitmap);
 }
 
 static LRESULT CALLBACK

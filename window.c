@@ -232,12 +232,10 @@ OnImageButtonClick(HWND hwnd)
       ERROR_BOX("Failed to get preview button!");
     }
 
-#if 0
   /* make the button clickable */
   EnableWindow(previewButton, TRUE);
-#endif
 
-#if 0
+  /* FIXME: we need GDI+ to load images other than BMP */
   imageBitmap = LoadImageA(NULL,
 		     fileName,
 		     IMAGE_BITMAP,
@@ -249,7 +247,6 @@ OnImageButtonClick(HWND hwnd)
       ERROR_BOX("Failed to load image!");
       return;
     }
-#endif
 }
 
 static char *
