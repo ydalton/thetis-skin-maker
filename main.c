@@ -8,7 +8,7 @@
 
 #define CLASS_NAME L"Win32SkinMakerClass"
 
-BOOL
+static BOOL
 ShouldContinue(void)
 {
   WCHAR expanded[MAX_PATH];
@@ -18,6 +18,29 @@ ShouldContinue(void)
 
   if(!PathFileExistsW(expanded))
     return FALSE;
+
+  return TRUE;
+}
+
+static LRESULT CALLBACK
+AboutDlgProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
+{
+  switch(msg)
+    {
+    case WM_INITDIALOG:
+      break;
+    case WM_COMMAND:
+      switch(LOWORD(wparam))
+	{
+	case IDOK:
+	  EndDialog(hwnd, IDOK);
+	  break;
+	case IDCANCEL:
+	  EndDialog(hwnd, IDCANCEL);
+	}
+    default:
+      return FALSE;
+    }
 
   return TRUE;
 }
@@ -41,10 +64,12 @@ WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
       switch(LOWORD(wparam))
 	{
 	case IDM_HELP_ABOUT:
-	  ShellAboutW(hwnd,
-		      WINDOW_NAME,
-		      L"A program to create skins to be used by OpenHPSDR Thetis.",
-		      NULL);
+	  {
+	    DialogBoxW(GetModuleHandle(NULL),
+		       MAKEINTRESOURCEW(IDD_ABOUT),
+		       hwnd,
+		       AboutDlgProc);
+	  }
 	  break;
 	case IDC_PREVIEW_BUTTON:
 	  OnPreviewButtonClick(hwnd);

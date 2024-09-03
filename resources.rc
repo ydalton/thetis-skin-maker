@@ -8,4 +8,17 @@ BEGIN
 	END
 END
 
+IDD_ABOUT DIALOG DISCARDABLE 0, 0, 250, 125
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "About ThetisSkinMaker"
+FONT 9, "MS Shell Dlg"
+BEGIN
+	GROUPBOX	"About ThetisSkinMaker", -1, 5, 4, 240, 116
+	DEFPUSHBUTTON	"OK", IDOK, 188, 100, 50, 15
+	CTEXT		"Version " VERSION "\r\n\r\n"
+			"Written by Yussef Dalton\r\n\r\n"
+			"With special thanks to John Dalton ON8EI",
+				 -1, 10, 50, 240, 40
+END
+
 1 RT_MANIFEST win32skinmaker.xml

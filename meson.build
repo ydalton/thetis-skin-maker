@@ -1,6 +1,7 @@
 project(
   'ThetisSkinMaker',
-  'c'
+  'c',
+  version: 'v0.1.0-alpha'
 )
 
 cc = meson.get_compiler('c')
@@ -19,7 +20,12 @@ win32skinmaker_deps = [
   cc.find_library('gdiplus'),
 ]
 
-win32skinmaker_sources += windows.compile_resources('resources.rc')
+win32skinmaker_sources += windows.compile_resources('resources.rc',
+						    args: [
+						        # windres seems to have a bug, this seems to fix it
+						        '--use-temp-file',
+						        '-DVERSION="' + meson.project_version() + '"'
+						    ])
 
 executable(
   meson.project_name(),

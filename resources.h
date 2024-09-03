@@ -8,6 +8,8 @@
 
 #define IDM_HELP_ABOUT 401
 
+#define IDD_ABOUT 801
+
 #define IDC_IMAGE_BUTTON 1001
 #define IDC_SAVE_BUTTON 1002
 #define IDC_NEW_BUTTON 1003
