@@ -25,5 +25,9 @@ executable(
   meson.project_name(),
   win32skinmaker_sources,
   dependencies: win32skinmaker_deps,
+  c_args: [
+    '-DUNICODE',
+    '-D_UNICODE',
+  ],
   win_subsystem: 'windows,6.0'
 )

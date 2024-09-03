@@ -2,11 +2,14 @@
 #include <windows.h>
 #include <commctrl.h>
 
+#include <stdio.h>
+#include <assert.h>
+
 #include "thetisskinmaker.h"
 
-#define CLASS_NAME "Win32ThetisSkinMakerPreview"
+#define CLASS_NAME L"Win32ThetisSkinMakerPreview"
 
-#define IMAGE_WIDTH 200
+#define IMAGE_WIDTH 450
 
 size_t bitmapWidth = 0, bitmapHeight = 0;
 
@@ -14,23 +17,22 @@ static void
 OnPreviewWindowCreate(HWND hwnd)
 {
   HINSTANCE instance;
-  HBITMAP resizedBitmap;
   HWND image;
 
   instance = GetModuleHandle(NULL);
 
-  image = CreateWindowEx(0,
-			 WC_STATIC,
-			 "",
-			 WS_CHILD | WS_VISIBLE | SS_BITMAP | SS_REALSIZECONTROL,
-			 0,
-			 0,
-			 bitmapWidth,
-			 bitmapHeight,
-			 hwnd,
-			 NULL,
-			 instance,
-			 NULL);
+  image = CreateWindowExW(0,
+			  WC_STATICW,
+			  L"",
+			  WS_CHILD | WS_VISIBLE | SS_BITMAP | SS_REALSIZECONTROL,
+			  0,
+			  0,
+			  bitmapWidth,
+			  bitmapHeight,
+			  hwnd,
+			  NULL,
+			  instance,
+			  NULL);
 
   CHECK(image);
 
@@ -55,22 +57,18 @@ void
 OnPreviewButtonClick(HWND hwnd)
 {
   HINSTANCE instance;
-  WNDCLASS wc = {0};
+  WNDCLASSW wc = {0};
   BITMAP bitmap;
   HWND previewWindow;
   RECT rect = {0};
 
   instance = GetModuleHandle(NULL);
 
-  if(!imageBitmap)
-    {
-      ERROR_BOX("Bitmap is not set!");
-      return;
-    }
+  assert(imageBitmap != NULL);
 
   if(!GetObject(imageBitmap, sizeof(bitmap), &bitmap))
     {
-      ERROR_BOX("Failed to get object for bitmap!");
+      ERROR_BOX(L"Failed to get object for bitmap!");
       return;
     }
 
@@ -78,10 +76,12 @@ OnPreviewButtonClick(HWND hwnd)
   wc.lpszClassName = CLASS_NAME;
   wc.hbrBackground = (HBRUSH) COLOR_WINDOW;
 
-  RegisterClass(&wc);
+  RegisterClassW(&wc);
 
-  float ratio = (float)IMAGE_WIDTH / bitmap.bmHeight;
-  float new_height = bitmap.bmHeight * ratio;
+  float ratio = (float)IMAGE_WIDTH / bitmap.bmWidth;
+  float new_height = ((float) bitmap.bmHeight) * ratio;
+
+  printf("%f %f", (float) IMAGE_WIDTH, new_height);
 
   rect.right = IMAGE_WIDTH;
   rect.bottom = (int) new_height;
@@ -92,18 +92,18 @@ OnPreviewButtonClick(HWND hwnd)
   bitmapWidth = rect.right - rect.left;
   bitmapHeight = rect.bottom - rect.top;
 
-  previewWindow = CreateWindowEx(0,
-				 CLASS_NAME,
-				 "Image preview",
-				 WS_OVERLAPPEDWINDOW & ~WS_SIZEBOX & ~WS_MAXIMIZEBOX,
-				 CW_USEDEFAULT,
-				 CW_USEDEFAULT,
-				 bitmapWidth,
-				 bitmapHeight,
-				 hwnd,
-				 NULL,
-				 instance,
-				 NULL);
+  previewWindow = CreateWindowExW(0,
+				  CLASS_NAME,
+				  L"Image preview",
+				  WS_OVERLAPPEDWINDOW & ~WS_SIZEBOX & ~WS_MAXIMIZEBOX,
+				  CW_USEDEFAULT,
+				  CW_USEDEFAULT,
+				  bitmapWidth,
+				  bitmapHeight,
+				  hwnd,
+				  NULL,
+				  instance,
+				  NULL);
 
   CHECK(previewWindow);
 

@@ -3,23 +3,20 @@
 #include <shlwapi.h>
 #include <shellapi.h>
 
-
 #include "resources.h"
 #include "thetisskinmaker.h"
 
-#define CLASS_NAME "Win32SkinMakerClass"
-
-#include <stdio.h>
+#define CLASS_NAME L"Win32SkinMakerClass"
 
 BOOL
 ShouldContinue(void)
 {
-  char expanded[MAX_PATH];
+  WCHAR expanded[MAX_PATH];
 
-  if(!ExpandEnvironmentStringsA(THETIS_SKIN_PATH, expanded, MAX_PATH))
+  if(!ExpandEnvironmentStringsW(THETIS_SKIN_PATH, expanded, MAX_PATH))
     return FALSE;
 
-  if(!PathFileExistsA(expanded))
+  if(!PathFileExistsW(expanded))
     return FALSE;
 
   return TRUE;
@@ -44,9 +41,9 @@ WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
       switch(LOWORD(wparam))
 	{
 	case IDM_HELP_ABOUT:
-	  ShellAboutA(hwnd,
+	  ShellAboutW(hwnd,
 		      WINDOW_NAME,
-		      "A program to create skins to be used by OpenHPSDR Thetis.",
+		      L"A program to create skins to be used by OpenHPSDR Thetis.",
 		      NULL);
 	  break;
 	case IDC_PREVIEW_BUTTON:
@@ -72,14 +69,14 @@ int WINAPI WinMain(HINSTANCE instance,
 		   LPSTR cmdLine,
 		   int cmdShow)
 {
-  WNDCLASS wc = {0};
+  WNDCLASSW wc = {0};
 
 
   if(!ShouldContinue())
     {
-      MessageBox(NULL,
-		 "No skins were found. Is Thetis installed properly?",
-		 "Skins Not Found",
+      MessageBoxW(NULL,
+		 L"No skins were found. Is Thetis installed properly?",
+		 L"Skins Not Found",
 		 MB_OK | MB_ICONERROR);
       return -1;
     }
@@ -87,10 +84,10 @@ int WINAPI WinMain(HINSTANCE instance,
   wc.hbrBackground = (HBRUSH) COLOR_WINDOW;
   wc.lpfnWndProc = WndProc;
   wc.hInstance = instance;
-  wc.lpszMenuName = MAKEINTRESOURCE(IDR_MAINMENU);
+  wc.lpszMenuName = MAKEINTRESOURCEW(IDR_MAINMENU);
   wc.lpszClassName = CLASS_NAME;
 
-  RegisterClass(&wc);
+  RegisterClassW(&wc);
 
   int screenWidth = GetSystemMetrics(SM_CXSCREEN);
   int screenHeight = GetSystemMetrics(SM_CYSCREEN);
@@ -98,7 +95,7 @@ int WINAPI WinMain(HINSTANCE instance,
   int windowX = (screenWidth/2) - (WINDOW_WIDTH/2);
   int windowY = (screenHeight/2) - (WINDOW_HEIGHT/2);
 
-  HWND hwnd = CreateWindowEx(0,
+  HWND hwnd = CreateWindowExW(0,
 			     CLASS_NAME,
 			     WINDOW_NAME,
 			     WS_OVERLAPPEDWINDOW & ~WS_SIZEBOX & ~WS_MAXIMIZEBOX,
@@ -112,7 +109,7 @@ int WINAPI WinMain(HINSTANCE instance,
 			     NULL);
   if(!hwnd)
     {
-      OutputDebugStringA("Could not create window.\n");
+      ERROR_BOX(L"Failed to create window!");
       return -1;
     }
 
