@@ -13,6 +13,10 @@
 
 HBITMAP imageBitmap;
 
+HWND g_editControl = NULL;
+HWND g_baseSkinDropDown = NULL;
+HWND g_previewButton = NULL;
+
 static BOOL
 FillBaseSkinDropDown(HWND hwnd)
 {
@@ -106,69 +110,76 @@ CreateActionControls(HWND hwnd, HFONT font, HINSTANCE instance)
 static void
 CreateSkinNameControls(HWND hwnd, HFONT font, HINSTANCE instance)
 {
-  HWND edit, groupBox;
+  HWND groupBox;
 
   groupBox = CREATE_GROUPBOX(L"Skin name", 10, 4, WINDOW_WIDTH - 35, 50, hwnd, instance);
 
   CHECK(groupBox)
 
-  edit = CreateWindowExW(0,
-			WC_EDITW,
-			L"",
-			WS_BORDER | WS_CHILD | WS_VISIBLE,
-			20,
-			25,
-			WINDOW_WIDTH - 55,
-			20,
-			hwnd,
-			(HMENU) IDC_SKIN_NAME_EDIT,
-			instance,
-			NULL);
+  g_editControl = CreateWindowExW(0,
+				  WC_EDITW,
+				  L"",
+				  WS_BORDER | WS_CHILD | WS_VISIBLE,
+				  20,
+				  25,
+				  WINDOW_WIDTH - 55,
+				  20,
+				  hwnd,
+				  (HMENU) IDC_SKIN_NAME_EDIT,
+				  instance,
+				  NULL);
 
-  CHECK(edit)
+  CHECK(g_editControl);
 
   SET_FONT(groupBox, font);
-  SET_FONT(edit, font);
+  SET_FONT(g_editControl, font);
 }
 
 
 static void
 CreateBaseSkinControls(HWND hwnd, HFONT font, HINSTANCE instance)
 {
-  HWND comboBox, groupBox;
+  HWND groupBox;
+  BOOL ret;
 
-  groupBox = CREATE_GROUPBOX(L"Base skin", 10, 55, WINDOW_WIDTH - 35, 50, hwnd, instance);
+  groupBox = CREATE_GROUPBOX(L"Base skin",
+			     10,
+			     55,
+			     WINDOW_WIDTH - 35,
+			     50,
+			     hwnd,
+			     instance);
 
   CHECK(groupBox)
 
-  comboBox = CreateWindowExW(0,
-			    WC_COMBOBOXW,
-			    L"",
-			    CBS_DROPDOWNLIST | CBS_HASSTRINGS | WS_VISIBLE | WS_CHILD | WS_VSCROLL,
-			    20,
-			    75,
-			    WINDOW_WIDTH - 55,
-			    200,
-			    hwnd,
-			    (HMENU)IDC_BASE_SKIN_DROPDOWN,
-			    instance,
-			    NULL);
+  g_baseSkinDropDown = CreateWindowExW(0,
+				       WC_COMBOBOXW,
+				       L"",
+				       CBS_DROPDOWNLIST | CBS_HASSTRINGS | WS_VISIBLE | WS_CHILD | WS_VSCROLL,
+				       20,
+				       75,
+				       WINDOW_WIDTH - 55,
+				       200,
+				       hwnd,
+				       (HMENU)IDC_BASE_SKIN_DROPDOWN,
+				       instance,
+				       NULL);
 
-  CHECK(comboBox);
+  CHECK(g_baseSkinDropDown);
 
-  SendMessage(comboBox, EM_SETREADONLY, TRUE, 0);
+  SendMessage(g_baseSkinDropDown, EM_SETREADONLY, TRUE, 0);
 
-  if(!FillBaseSkinDropDown(comboBox))
-    ERROR_BOX(L"Failed filling in dropdown box!");
+  ret = FillBaseSkinDropDown(g_baseSkinDropDown);
+  assert(ret != FALSE);
 
   SET_FONT(groupBox, font);
-  SET_FONT(comboBox, font);
+  SET_FONT(g_baseSkinDropDown, font);
 }
 
 static void
 CreateBackgroundImageControls(HWND hwnd, HFONT font, HINSTANCE instance)
 {
-  HWND groupBox, button, previewButton;
+  HWND groupBox, button;
 
   groupBox = CREATE_GROUPBOX(L"Background image", 10, 105, WINDOW_WIDTH - 35, 55, hwnd, instance);
 
@@ -189,24 +200,24 @@ CreateBackgroundImageControls(HWND hwnd, HFONT font, HINSTANCE instance)
 
   CHECK(button);
 
-  previewButton = CreateWindowExW(0,
-				  WC_BUTTONW,
-				  L"View preview",
-				  WS_CHILD | WS_VISIBLE | WS_DISABLED,
-				  220,
-				  125,
-				  195,
-				  25,
-				  hwnd,
-				  (HMENU) IDC_PREVIEW_BUTTON,
-				  instance,
-				  NULL);
+  g_previewButton = CreateWindowExW(0,
+				    WC_BUTTONW,
+				    L"View preview",
+				    WS_CHILD | WS_VISIBLE | WS_DISABLED,
+				    220,
+				    125,
+				    195,
+				    25,
+				    hwnd,
+				    (HMENU) IDC_PREVIEW_BUTTON,
+				    instance,
+				    NULL);
 
-  CHECK(previewButton);
+  CHECK(g_previewButton);
 
   SET_FONT(groupBox, font);
   SET_FONT(button, font);
-  SET_FONT(previewButton, font);
+  SET_FONT(g_previewButton, font);
 }
 
 void
@@ -236,7 +247,12 @@ OnImageButtonClick(HWND hwnd)
   /* make the button clickable */
   EnableWindow(previewButton, TRUE);
 
-  /* FIXME: we need GDI+ to load images other than BMP */
+  /* avoid resource leak by deleting bitmap if a new one is being set */
+  if(imageBitmap)
+    {
+      DeleteObject(imageBitmap);
+      imageBitmap = NULL;
+    }
   imageBitmap = CreateBitmapFromPath(fileName);
   if(!imageBitmap)
     {
@@ -287,6 +303,7 @@ OnSaveButtonClick(HWND hwnd)
   WCHAR expanded[MAX_PATH] = {0};
   WCHAR srcPath[MAX_PATH] = {0};
   WCHAR destPath[MAX_PATH] = {0};
+  WCHAR picdisplay[MAX_PATH] = {0};
   WCHAR skinName[64];
   WCHAR *sourceSkin;
   int pathIsExpanded = 0;
@@ -295,10 +312,9 @@ OnSaveButtonClick(HWND hwnd)
 
   assert(pathIsExpanded);
 
-  edit = GetDlgItem(hwnd, IDC_SKIN_NAME_EDIT);
-  assert(edit != NULL);
+  assert(g_editControl != NULL);
 
-  GetWindowTextW(edit, skinName, 64);
+  GetWindowTextW(g_editControl, skinName, 64);
 
   assert(skinName != NULL);
   if(wcscmp(skinName, L"") == 0)
@@ -307,11 +323,10 @@ OnSaveButtonClick(HWND hwnd)
       return;
     }
 
-  comboBox = GetDlgItem(hwnd, IDC_BASE_SKIN_DROPDOWN);
-  assert(comboBox != NULL);
+  assert(g_baseSkinDropDown != NULL);
 
   /* only returns NULL if no item is selected */
-  sourceSkin = GetDropDownItem(comboBox);
+  sourceSkin = GetDropDownItem(g_baseSkinDropDown);
   if(!sourceSkin)
     {
       ERROR_BOX_WITH_CAPTION(L"Please select a base skin.", L"Base Skin Not Selected");
@@ -333,10 +348,33 @@ OnSaveButtonClick(HWND hwnd)
       return;
     }
 
+  _snwprintf(picdisplay, MAX_PATH, L"%s\\%s", destPath, THETIS_PICDISPLAY_PATH);
+
+ if(SaveBitmapToFile(imageBitmap, picdisplay))
+   {
+     ERROR_BOX(L"Failed to save picdisplay file. Your skin is not complete.");
+     return;
+   }
+
   MessageBoxW(NULL,
 	     L"Skin successfully saved! Please restart Thetis if it is already open.",
 	     L"Skin Saved",
 	     MB_OK | MB_ICONINFORMATION);
+}
+
+void
+OnNewButtonClick(HWND hwnd)
+{
+  assert(g_editControl != NULL);
+  assert(g_baseSkinDropDown != NULL);
+  assert(g_previewButton != NULL);
+
+  SetWindowTextW(g_editControl, L"");
+
+  /* empty the dropdown */
+  SendMessage(g_baseSkinDropDown, CB_SETCURSEL, (WPARAM) -1, 0);
+
+  EnableWindow(g_previewButton, FALSE);
 }
 
 void

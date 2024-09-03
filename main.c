@@ -55,6 +55,9 @@ WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 	case IDC_SAVE_BUTTON:
 	  OnSaveButtonClick(hwnd);
 	  break;
+	case IDC_NEW_BUTTON:
+	  OnNewButtonClick(hwnd);
+	  break;
 	}
       break;
     default:

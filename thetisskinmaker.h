@@ -46,6 +46,7 @@ extern HBITMAP imageBitmap;
 void OnPreviewButtonClick(HWND hwnd);
 void OnImageButtonClick(HWND hwnd);
 void OnSaveButtonClick(HWND hwnd);
+void OnNewButtonClick(HWND hwnd);
 void OnCreate(HWND hwnd);
 
 HBITMAP CreateBitmapFromPath(LPWSTR path);
