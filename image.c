@@ -78,9 +78,9 @@ int SaveBitmapToFile(HBITMAP bitmap, LPWSTR path)
     /* we will always have to use PNG */
     g_pngEncoder = GetEncoderForFormat(L"image/png");
 
-  assert(IsEqualCLSID(&g_pngEncoder, &CLSID_NULL));
+  assert(!IsEqualCLSID(&g_pngEncoder, &CLSID_NULL));
 
-  ret = GdipSaveImageToFile(gdiBmp, path, NULL, NULL);
+  ret = GdipSaveImageToFile(gdiBmp, path, &g_pngEncoder, NULL);
   if(ret)
     return ret;
 
