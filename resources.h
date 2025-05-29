@@ -4,18 +4,20 @@
 #include <windef.h>
 #include <winuser.h>
 
-#define IDR_MAINMENU 101
+#define IDR_MAINMENU                 101
 
-#define IDM_HELP_ABOUT 401
+#define IDM_HELP_ABOUT               401
 
-#define IDD_ABOUT 801
+#define IDD_ABOUT                    801
 
-#define IDC_IMAGE_BUTTON 1001
-#define IDC_SAVE_BUTTON 1002
-#define IDC_NEW_BUTTON 1003
-#define IDC_PREVIEW_BUTTON 1004
-#define IDC_BASE_SKIN_DROPDOWN 1005
-#define IDC_SKIN_NAME_EDIT 1006
-#define IDC_PREVIEW_STATIC_BITMAP 1007
+#define IDC_BROWSE_BUTTON            1001
+#define IDC_SAVE_BUTTON              1002
+#define IDC_RESET_BUTTON             1003
+#define IDC_PREVIEW_BUTTON           1004
+#define IDC_BASE_SKIN_DROPDOWN       1005
+#define IDC_SKIN_NAME_EDIT           1006
+#define IDC_PREVIEW_STATIC_BITMAP    1007
+
+#define ID_ICON                      1008
 
 #endif

@@ -17,8 +17,11 @@ BEGIN
 	DEFPUSHBUTTON	"OK", IDOK, 188, 100, 50, 15
 	CTEXT		"Version " VERSION "\r\n\r\n"
 			"Written by Yussef Dalton\r\n\r\n"
+			"Icon by Kaan Durak\r\n\r\n"
 			"With special thanks to John Dalton ON8EI",
-				 -1, 10, 50, 240, 40
+				 -1, 10, 30, 240, 60
 END
+
+ID_ICON ICON tsm.ico
 
 1 RT_MANIFEST win32skinmaker.xml

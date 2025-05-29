@@ -9,147 +9,171 @@
 #define CLASS_NAME L"Win32SkinMakerClass"
 
 static BOOL
-ShouldContinue(void)
+ThetisSkinsExist(void)
 {
-  WCHAR expanded[MAX_PATH];
+	BOOL shouldContinue = FALSE;
+	WCHAR expanded[MAX_PATH];
 
-  if(!ExpandEnvironmentStringsW(THETIS_SKIN_PATH, expanded, MAX_PATH))
-    return FALSE;
+	shouldContinue = ExpandEnvironmentStringsW(THETIS_SKIN_PATH, expanded, MAX_PATH);
 
-  if(!PathFileExistsW(expanded))
-    return FALSE;
+	if (shouldContinue)
+	{
+		shouldContinue = PathFileExistsW(expanded);
+	}
 
-  return TRUE;
+	return shouldContinue;
 }
 
 static LRESULT CALLBACK
 AboutDlgProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
-  switch(msg)
+    LRESULT result = TRUE;
+
+    (void) lparam;
+
+    switch(msg)
     {
-    case WM_INITDIALOG:
-      break;
-    case WM_COMMAND:
-      switch(LOWORD(wparam))
-	{
-	case IDOK:
-	  EndDialog(hwnd, IDOK);
-	  break;
-	case IDCANCEL:
-	  EndDialog(hwnd, IDCANCEL);
-	}
-    default:
-      return FALSE;
+        case WM_INITDIALOG:
+            break;
+        case WM_COMMAND:
+            switch(LOWORD(wparam))
+            {
+                case IDOK:
+                    EndDialog(hwnd, IDOK);
+                    break;
+                case IDCANCEL:
+                    EndDialog(hwnd, IDCANCEL);
+                    break;
+            }
+            break;
+        default:
+            result = FALSE;
+            break;
     }
 
-  return TRUE;
+    return result;
 }
 
 static LRESULT CALLBACK
 WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
-  switch(msg)
+    (void) lparam;
+
+    switch(msg)
     {
-    case WM_CREATE:
-      OnCreate(hwnd);
-      break;      
-    case WM_DESTROY:
-      if(imageBitmap)
-	{
-	  DeleteObject(imageBitmap);
-	}
-      PostQuitMessage(0);
-      break;
-    case WM_COMMAND:
-      switch(LOWORD(wparam))
-	{
-	case IDM_HELP_ABOUT:
-	  {
-	    DialogBoxW(GetModuleHandle(NULL),
-		       MAKEINTRESOURCEW(IDD_ABOUT),
-		       hwnd,
-		       AboutDlgProc);
-	  }
-	  break;
-	case IDC_PREVIEW_BUTTON:
-	  OnPreviewButtonClick(hwnd);
-	  break;
-	case IDC_IMAGE_BUTTON:
-	  OnImageButtonClick(hwnd);
-	  break;
-	case IDC_SAVE_BUTTON:
-	  OnSaveButtonClick(hwnd);
-	  break;
-	case IDC_NEW_BUTTON:
-	  OnNewButtonClick(hwnd);
-	  break;
-	}
-      break;
-    default:
-      return DefWindowProc(hwnd, msg, wparam, lparam);
+        case WM_CREATE:
+            OnCreate(hwnd);
+            break;
+        case WM_DESTROY:
+            if(hbmpImage)
+            {
+                DeleteObject(hbmpImage);
+            }
+            PostQuitMessage(0);
+            break;
+        case WM_SETCURSOR:
+            /* Set the cursor when it's over the client area */
+            if (LOWORD(lparam) == HTCLIENT) {
+                SetCursor(LoadCursor(NULL, IDC_ARROW));
+                return TRUE;
+            }
+            break;
+        case WM_COMMAND:
+            switch(LOWORD(wparam))
+            {
+                case IDM_HELP_ABOUT:
+                    DialogBoxW(GetModuleHandle(NULL),
+                        MAKEINTRESOURCEW(IDD_ABOUT),
+                        hwnd,
+                        AboutDlgProc);
+                    break;
+                case IDC_PREVIEW_BUTTON:
+                    OnPreviewClick(hwnd);
+                    break;
+                case IDC_BROWSE_BUTTON:
+                    OnBrowse(hwnd);
+                    break;
+                case IDC_SAVE_BUTTON:
+                    OnSave(hwnd);
+                    break;
+                case IDC_RESET_BUTTON:
+                    OnReset(hwnd);
+                    break;
+            }
+            break;
+        default:
+            return DefWindowProc(hwnd, msg, wparam, lparam);
     }
 
-  return 0;
+    return 0;
 }
 
-int WINAPI WinMain(HINSTANCE instance,
-		   HINSTANCE prevInstance,
-		   LPSTR cmdLine,
-		   int cmdShow)
+int WINAPI WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int cmdShow)
 {
-  WNDCLASSW wc = {0};
+	WNDCLASSW wc = {0};
+	MSG msg = {0};
+	int screenWidth, screenHeight, windowX, windowY;
+	HWND hwndMain = NULL;
 
+	(void) prevInstance;
+	(void) cmdLine;
 
-  if(!ShouldContinue())
-    {
-      MessageBoxW(NULL,
-		 L"No skins were found. Is Thetis installed properly?",
-		 L"Skins Not Found",
-		 MB_OK | MB_ICONERROR);
-      return -1;
-    }
+	if(!ThetisSkinsExist())
+	{
+		int ret = MessageBoxW(NULL,
+				L"No existing Thetis skins were found. Do you wish to continue?",
+				L"Skins Not Found",
+				MB_YESNO | MB_ICONWARNING);
 
-  wc.hbrBackground = (HBRUSH) COLOR_WINDOW;
-  wc.lpfnWndProc = WndProc;
-  wc.hInstance = instance;
-  wc.lpszMenuName = MAKEINTRESOURCEW(IDR_MAINMENU);
-  wc.lpszClassName = CLASS_NAME;
+		if (ret == IDNO) {
+			return -1;
+		}
+	}
 
-  RegisterClassW(&wc);
+	wc.hbrBackground = (HBRUSH) (COLOR_BTNFACE + 1);
+	wc.lpfnWndProc = WndProc;
+	wc.hInstance = instance;
+	wc.lpszMenuName = MAKEINTRESOURCEW(IDR_MAINMENU);
+	wc.lpszClassName = CLASS_NAME;
+	wc.hCursor = LoadCursor(NULL, IDC_ARROW);
+	wc.hIcon = LoadIconW(instance, MAKEINTRESOURCEW(ID_ICON));
 
-  int screenWidth = GetSystemMetrics(SM_CXSCREEN);
-  int screenHeight = GetSystemMetrics(SM_CYSCREEN);
-  
-  int windowX = (screenWidth/2) - (WINDOW_WIDTH/2);
-  int windowY = (screenHeight/2) - (WINDOW_HEIGHT/2);
+	RegisterClassW(&wc);
 
-  HWND hwnd = CreateWindowExW(0,
-			     CLASS_NAME,
-			     WINDOW_NAME,
-			     WS_OVERLAPPEDWINDOW & ~WS_SIZEBOX & ~WS_MAXIMIZEBOX,
-			     windowX, /* x */
-			     windowY, /* y */
-			     WINDOW_WIDTH, /* width */
-			     WINDOW_HEIGHT, /* height */
-			     NULL,
-			     NULL,
-			     instance,
-			     NULL);
-  if(!hwnd)
-    {
-      ERROR_BOX(L"Failed to create window!");
-      return -1;
-    }
+    screenWidth = GetSystemMetrics(SM_CXSCREEN);
+	screenHeight = GetSystemMetrics(SM_CYSCREEN);
 
-  ShowWindow(hwnd, cmdShow);
+	windowX = (screenWidth/2) - (WINDOW_WIDTH/2);
+	windowY = (screenHeight/2) - (WINDOW_HEIGHT/2);
 
-  MSG msg = {0};
+	hwndMain = CreateWindowExW(0,
+                    CLASS_NAME,
+                   	WINDOW_NAME,
+                   	WS_OVERLAPPEDWINDOW & ~WS_SIZEBOX & ~WS_MAXIMIZEBOX,
+                   	windowX, /* x */
+                   	windowY, /* y */
+                   	WINDOW_WIDTH, /* width */
+                   	WINDOW_HEIGHT, /* height */
+                   	NULL,
+                   	NULL,
+                   	instance,
+                   	NULL);
 
-  while(GetMessage(&msg, NULL, 0, 0))
-    {
-      TranslateMessage(&msg);
-      DispatchMessage(&msg);
-    }
+	if(!hwndMain)
+	{
+		ERROR_BOX(L"Failed to create window!");
+		return -1;
+	}
 
-  return 0;
+	ShowWindow(hwndMain, cmdShow);
+
+	while(GetMessage(&msg, NULL, 0, 0))
+	{
+        if (IsDialogMessage(hwndMain, &msg))
+            continue;
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
+	}
+
+	return 0;
 }

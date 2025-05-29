@@ -1,3 +1,4 @@
+#include <stdint.h>
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <shellapi.h>
@@ -11,420 +12,180 @@
 #include "resources.h"
 #include "thetisskinmaker.h"
 
-HBITMAP imageBitmap;
-
-HWND g_editControl = NULL;
-HWND g_baseSkinDropDown = NULL;
-HWND g_previewButton = NULL;
-HWND g_progressBar = NULL;
-
-static BOOL
-FillBaseSkinDropDown(HWND hwnd)
+struct CreateWindowInfo
 {
-  WIN32_FIND_DATAW data;
-  HANDLE file;
-  LPWSTR filename;
-  WCHAR expandedPath[MAX_PATH] = {0};
-  WCHAR wildcard[MAX_PATH] = {0};
-  WCHAR picdisplayPath[MAX_PATH] = {0};
+    LPWSTR className;
+    LPWSTR text;
+    int style;
+    int x, y;
+    int width, height;
+    uintptr_t menu;
+    HWND *pHwnd;
+};
 
-  if(!ExpandEnvironmentStringsW(THETIS_SKIN_PATH, expandedPath, MAX_PATH))
-    return FALSE;
+HBITMAP hbmpImage  = NULL;
 
-  /* ??? why does _ make all the difference? */
-  _snwprintf(wildcard, MAX_PATH, L"%s\\*", expandedPath);
+HWND lblSkinName   = NULL;
+HWND txtSkinName   = NULL;
+HWND cboBaseSkin   = NULL;
+HWND lblBaseSkin   = NULL;
+HWND btnSave       = NULL;
+HWND grpBackground = NULL;
+HWND btnBrowse     = NULL;
+HWND txtFile       = NULL;
+HWND btnPreview    = NULL;
+HWND btnReset      = NULL;
+HWND lblFile       = NULL;
 
-  file = FindFirstFileW(wildcard, &data);
-  /* get all files in the skin folder */
+static struct CreateWindowInfo child_controls[] = {
+    /* class        text                 style                                                    x    y    width  height hmenu,                hwnd           */
+    { WC_STATICW,   L"Skin name: ",      0,                                                       12,  12,  80,    13,    0,                    &lblSkinName   },
+    { WC_EDITW,     NULL,                WS_BORDER | WS_TABSTOP,                                  77,  9,   201,   20,    0,                    &txtSkinName   },
+    { WC_COMBOBOXW, NULL,                CBS_DROPDOWNLIST | CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP, 77,  35,  201,   21,    0,                    &cboBaseSkin   },
+    { WC_STATICW,   L"Base skin: ",      0,                                                       12,  38,  56,    13,    0,                    &lblBaseSkin   },
+    { WC_BUTTONW,   L"Background image", BS_GROUPBOX,                                             15,  62,  264,   78,    0,                    &grpBackground },
+    { WC_BUTTONW,   L"Browse...",        BS_PUSHBUTTON | WS_TABSTOP,                              198, 78,  75,    23,    IDC_BROWSE_BUTTON,    &btnBrowse     },
+    { WC_EDITW,     NULL,                WS_BORDER | ES_READONLY,                                 77,  80,  114,   20,    0,                    &txtFile       },
+    { WC_BUTTONW,   L"Preview",          BS_PUSHBUTTON | WS_TABSTOP,                              198, 107, 75,    23,    IDC_PREVIEW_BUTTON,   &btnPreview    },
+    { WC_BUTTONW,   L"Reset",            BS_PUSHBUTTON | WS_TABSTOP,                              15,  150, 75,    23,    IDC_RESET_BUTTON,     &btnReset      },
+    { WC_BUTTONW,   L"Save",             BS_DEFPUSHBUTTON | WS_TABSTOP,                           204, 150, 75,    23,    IDC_SAVE_BUTTON,      &btnSave       },
+    { WC_STATICW,   L"File: ",           0,                                                       21,  83,  26,    13,    0,                    &lblFile       },
+};
 
-  if(file == INVALID_HANDLE_VALUE)
-    return FALSE;
+void CreateControls(HWND hwndParent);
+void SetDefaults(void);
+void SetControls(void);
+void LoadSkin(ThetisSkin *pSkin);
 
-  do
+void OnCreate(HWND hwndMain)
+{
+    CreateControls(hwndMain);
+    SetDefaults();
+    SetControls();
+
+    /* focus the skin name textbox */
+    SetFocus(txtSkinName);
+}
+
+void CreateControls(HWND hwndParent)
+{
+    HINSTANCE instance = GetModuleHandleW(NULL);
+    HFONT font = NULL;
+    unsigned int i = 0;
+
+    font = GetStockObject(DEFAULT_GUI_FONT);
+
+    for (i = 0; i < (sizeof(child_controls)/sizeof(struct CreateWindowInfo)); i++)
     {
-      filename = data.cFileName;
-      if(wcscmp(filename, L".") == 0 || wcscmp(filename, L"..") == 0)
-	continue;
+        struct CreateWindowInfo *pInfo = &child_controls[i];
+        HWND hwndControl;
 
-      _snwprintf(picdisplayPath,
-		MAX_PATH,
-		L"%s\\%s\\%s",
-		expandedPath,
-		filename,
-		THETIS_PICDISPLAY_PATH);
+        hwndControl = CreateWindowEx(0,
+                                     pInfo->className,
+                                     pInfo->text,
+                                     pInfo->style | WS_VISIBLE | WS_CHILD,
+                                     pInfo->x,
+                                     pInfo->y,
+                                     pInfo->width,
+                                     pInfo->height,
+                                     hwndParent,
+                                     (HMENU) pInfo->menu,
+                                     instance,
+                                     NULL);
 
-      /* it's not a skin if it doesn't have at least the picdisplay file */
-      if(!PathFileExistsW(picdisplayPath))
-	continue;
+        /* set the correct system font */
+        SendMessage(hwndControl, WM_SETFONT, (WPARAM) font, MAKELPARAM(FALSE, 0));
 
-      SendMessage(hwnd, CB_ADDSTRING, 0, (LPARAM) filename);
-    }
-  while(FindNextFileW(file, &data));
-
-  return TRUE;
-}
-
-static void
-CreateProgressControls(HWND hwnd, HFONT font, HINSTANCE instance)
-{
-  HWND groupBox;
-
-  groupBox = CREATE_GROUPBOX(L"Progress", 10, 210, WINDOW_WIDTH - 35, 50, hwnd, instance);
-
-  g_progressBar = CreateWindowExW(0,
-				  PROGRESS_CLASSW,
-				  L"",
-				  WS_VISIBLE | WS_CHILD,
-				  21,
-				  228,
-				  393,
-				  23,
-				  hwnd,
-				  NULL,
-				  instance,
-				  NULL);
-
-  CHECK(g_progressBar);
-
-  SET_FONT(groupBox, font);
-  SET_FONT(g_progressBar, font);
-}
-
-static void
-CreateActionControls(HWND hwnd, HFONT font, HINSTANCE instance)
-{
-  HWND groupBox, saveButton, newButton;
-
-  groupBox = CREATE_GROUPBOX(L"Actions", 10, 160, WINDOW_WIDTH - 35, 50, hwnd, instance);
-
-  CHECK(groupBox);
-
-  saveButton = CreateWindowExW(0,
-			      WC_BUTTONW,
-			      L"Save skin",
-			      WS_VISIBLE | WS_CHILD,
-			      20,
-			      178,
-			      190,
-			      25,
-			      hwnd,
-			      (HMENU) IDC_SAVE_BUTTON,
-			      instance,
-			      NULL);
-
-  CHECK(saveButton);
-
-  newButton = CreateWindowExW(0,
-			     WC_BUTTONW,
-			     L"New skin",
-			     WS_VISIBLE | WS_CHILD,
-			     220,
-			     178,
-			     195,
-			     25,
-			     hwnd,
-			     (HMENU) IDC_NEW_BUTTON,
-			     instance,
-			     NULL);
-
-  CHECK(newButton);
-
-
-  SET_FONT(groupBox, font);
-  SET_FONT(saveButton, font);
-  SET_FONT(newButton, font);
-}
-
-static void
-CreateSkinNameControls(HWND hwnd, HFONT font, HINSTANCE instance)
-{
-  HWND groupBox;
-
-  groupBox = CREATE_GROUPBOX(L"Skin name", 10, 4, WINDOW_WIDTH - 35, 50, hwnd, instance);
-
-  CHECK(groupBox)
-
-  g_editControl = CreateWindowExW(0,
-				  WC_EDITW,
-				  L"",
-				  WS_BORDER | WS_CHILD | WS_VISIBLE,
-				  20,
-				  25,
-				  WINDOW_WIDTH - 55,
-				  20,
-				  hwnd,
-				  (HMENU) IDC_SKIN_NAME_EDIT,
-				  instance,
-				  NULL);
-
-  CHECK(g_editControl);
-
-  SET_FONT(groupBox, font);
-  SET_FONT(g_editControl, font);
-}
-
-
-static void
-CreateBaseSkinControls(HWND hwnd, HFONT font, HINSTANCE instance)
-{
-  HWND groupBox;
-  BOOL ret;
-
-  groupBox = CREATE_GROUPBOX(L"Base skin",
-			     10,
-			     55,
-			     WINDOW_WIDTH - 35,
-			     50,
-			     hwnd,
-			     instance);
-
-  CHECK(groupBox)
-
-  g_baseSkinDropDown = CreateWindowExW(0,
-				       WC_COMBOBOXW,
-				       L"",
-				       CBS_DROPDOWNLIST | CBS_HASSTRINGS | WS_VISIBLE | WS_CHILD | WS_VSCROLL,
-				       20,
-				       75,
-				       WINDOW_WIDTH - 55,
-				       200,
-				       hwnd,
-				       (HMENU)IDC_BASE_SKIN_DROPDOWN,
-				       instance,
-				       NULL);
-
-  CHECK(g_baseSkinDropDown);
-
-  SendMessage(g_baseSkinDropDown, EM_SETREADONLY, TRUE, 0);
-
-  ret = FillBaseSkinDropDown(g_baseSkinDropDown);
-  assert(ret != FALSE);
-
-  SET_FONT(groupBox, font);
-  SET_FONT(g_baseSkinDropDown, font);
-}
-
-static void
-CreateBackgroundImageControls(HWND hwnd, HFONT font, HINSTANCE instance)
-{
-  HWND groupBox, button;
-
-  groupBox = CREATE_GROUPBOX(L"Background image", 10, 105, WINDOW_WIDTH - 35, 55, hwnd, instance);
-
-  CHECK(groupBox);
-
-  button = CreateWindowExW(0,
-			   WC_BUTTONW,
-			   L"Select background image",
-			   WS_CHILD | WS_VISIBLE,
-			   20,
-			   125,
-			   190,
-			   25,
-			   hwnd,
-			   (HMENU) IDC_IMAGE_BUTTON,
-			   instance,
-			   NULL);
-
-  CHECK(button);
-
-  g_previewButton = CreateWindowExW(0,
-				    WC_BUTTONW,
-				    L"View preview",
-				    WS_CHILD | WS_VISIBLE | WS_DISABLED,
-				    220,
-				    125,
-				    195,
-				    25,
-				    hwnd,
-				    (HMENU) IDC_PREVIEW_BUTTON,
-				    instance,
-				    NULL);
-
-  CHECK(g_previewButton);
-
-  SET_FONT(groupBox, font);
-  SET_FONT(button, font);
-  SET_FONT(g_previewButton, font);
-}
-
-void
-OnImageButtonClick(HWND hwnd)
-{
-  HWND previewButton;
-
-  OPENFILENAMEW ofn = {0};
-  WCHAR fileName[MAX_PATH] = L"";
-  ofn.lpstrFilter = L"All Image files\0" "*.png;*.jpg;*.jpeg;*.bmp\0" "All\0*.*\0";
-  ofn.lpstrFile = fileName;
-  ofn.nMaxFile = MAX_PATH;
-  ofn.lStructSize = sizeof(OPENFILENAMEW);
-  ofn.hwndOwner = hwnd;
-  ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
-
-  if(!GetOpenFileNameW(&ofn))
-    return;
-
-  previewButton = GetDlgItem(hwnd, IDC_PREVIEW_BUTTON);
-
-  if(!previewButton)
-    {
-      ERROR_BOX(L"Failed to get preview button!");
-    }
-
-  /* make the button clickable */
-  EnableWindow(previewButton, TRUE);
-
-  /* avoid resource leak by deleting bitmap if a new one is being set */
-  if(imageBitmap)
-    {
-      DeleteObject(imageBitmap);
-      imageBitmap = NULL;
-    }
-  imageBitmap = CreateBitmapFromPath(fileName);
-  if(!imageBitmap)
-    {
-      ERROR_BOX(L"Failed to load image!");
-      return;
+        *(pInfo->pHwnd) = hwndControl;
     }
 }
 
-static WCHAR *
-GetDropDownItem(HWND hwnd)
+void SetDefaults(void)
 {
-  LPWSTR string;
-  int index, length;
-
-  /* get currently selected index */
-  index = SendMessage(hwnd, CB_GETCURSEL, 0, 0);
-
-  if(index == CB_ERR)
-    return NULL;
-
-  /* get length of currently selected item */
-  length = SendMessage(hwnd, CB_GETLBTEXTLEN, index, 0);
-  assert(length != CB_ERR);
-
-  string = malloc((length + 1) * sizeof(TCHAR));
-  SendMessage(hwnd, CB_GETLBTEXT, index, (LPARAM) string);
-
-  return string;
+    SetWindowTextW(txtSkinName, L"");
+    SetWindowTextW(txtFile, L"");
+    SetFocus(txtSkinName);
 }
 
-int
-CopyFolderRecursively(LPWSTR src, LPWSTR dest)
+void SetControls(void)
 {
-  SHFILEOPSTRUCTW s = {0};
+    WCHAR fileName[MAX_PATH] = L"";
+    BOOL btnPreviewEnabled = FALSE;
 
-  s.wFunc = FO_COPY;
-  s.fFlags = FOF_SILENT;
-  s.pFrom = src;
-  s.pTo = dest;
+    GetWindowTextW(txtFile, fileName, MAX_PATH);
 
-  return SHFileOperationW(&s);
+    if (wcscmp(fileName, L"") != 0)
+    {
+        btnPreviewEnabled = TRUE;
+    }
+
+    EnableWindow(btnPreview, btnPreviewEnabled);
 }
 
-void
-OnSaveButtonClick(HWND hwnd)
+
+void OnBrowse(HWND hwnd)
 {
-  WCHAR expanded[MAX_PATH] = {0};
-  WCHAR srcPath[MAX_PATH] = {0};
-  WCHAR destPath[MAX_PATH] = {0};
-  WCHAR picdisplay[MAX_PATH] = {0};
-  WCHAR skinName[64];
-  WCHAR *sourceSkin;
-  int pathIsExpanded = 0;
+    OPENFILENAMEW ofn = {0};
+    WCHAR fileName[MAX_PATH] = L"";
 
-  pathIsExpanded = ExpandEnvironmentStringsW(THETIS_SKIN_PATH, expanded, MAX_PATH);
+    ofn.lpstrFilter = L"All Image files\0" "*.png;*.jpg;*.jpeg;*.bmp\0" "All\0*.*\0";
+    ofn.lpstrFile = fileName;
+    ofn.nMaxFile = MAX_PATH;
+    ofn.lStructSize = sizeof(OPENFILENAMEW);
+    ofn.hwndOwner = hwnd;
+    ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
 
-  assert(pathIsExpanded);
-
-  assert(g_editControl != NULL);
-
-  GetWindowTextW(g_editControl, skinName, 64);
-
-  assert(skinName != NULL);
-  if(wcscmp(skinName, L"") == 0)
+    if(GetOpenFileNameW(&ofn))
     {
-      ERROR_BOX_WITH_CAPTION(L"Please enter a skin name.", L"Empty Skin Name");
-      return;
+        /* avoid resource leak by deleting bitmap if a new one is being set */
+        if(hbmpImage)
+        {
+            DeleteObject(hbmpImage);
+        }
+        hbmpImage = CreateBitmapFromPath(fileName);
+        if(hbmpImage)
+        {
+            SetWindowTextW(txtFile, fileName);
+            SetControls();
+        }
+        else
+        {
+            ERROR_BOX(L"Failed to load image!");
+        }
     }
-
-  assert(g_baseSkinDropDown != NULL);
-
-  /* only returns NULL if no item is selected */
-  sourceSkin = GetDropDownItem(g_baseSkinDropDown);
-  if(!sourceSkin)
-    {
-      ERROR_BOX_WITH_CAPTION(L"Please select a base skin.", L"Base Skin Not Selected");
-      return;
-    }
-
-  _snwprintf(srcPath, MAX_PATH, L"%s\\%s", expanded, sourceSkin);
-  _snwprintf(destPath, MAX_PATH, L"%s\\%s", expanded, skinName);
-
-  if(PathFileExistsW(destPath))
-    {
-      ERROR_BOX(L"Skin already exists. Please select another name!");
-      return;
-    }
-
-  SendMessage(g_progressBar, PBM_SETPOS, (WPARAM) 33, 0);
-
-  if(CopyFolderRecursively(srcPath, destPath))
-    {
-      ERROR_BOX(L"Failed to copy folder for skin. This should not happen.");
-      return;
-    }
-
-  /* set progress bar position */
-  SendMessage(g_progressBar, PBM_SETPOS, (WPARAM) 66, 0);
-
-  _snwprintf(picdisplay, MAX_PATH, L"%s\\%s", destPath, THETIS_PICDISPLAY_PATH);
-
-  if(SaveBitmapToFile(imageBitmap, picdisplay))
-    {
-      ERROR_BOX(L"Failed to save picdisplay file. Your skin is not complete.");
-      return;
-    }
-
-  SendMessage(g_progressBar, PBM_SETPOS, (WPARAM) 100, 0);
-
-  MessageBoxW(NULL,
-	     L"Skin successfully saved! Please restart Thetis if it is already open.",
-	     L"Skin Saved",
-	     MB_OK | MB_ICONINFORMATION);
-
-  SendMessage(g_progressBar, PBM_SETPOS, (WPARAM) 0, 0);
 }
 
-void
-OnNewButtonClick(HWND hwnd)
+void OnSave(HWND hwnd)
 {
-  assert(g_editControl != NULL);
-  assert(g_baseSkinDropDown != NULL);
-  assert(g_previewButton != NULL);
+    WCHAR error[256] = {0};
+    ThetisSkin skin = {0};
 
-  SetWindowTextW(g_editControl, L"");
+    SetCursor(LoadCursorW(NULL, IDC_WAIT));
 
-  /* empty the dropdown */
-  SendMessage(g_baseSkinDropDown, CB_SETCURSEL, (WPARAM) -1, 0);
+    LoadSkin(&skin);
 
-  EnableWindow(g_previewButton, FALSE);
+    if (ThetisSkin_Save(&skin, error, sizeof(error)/sizeof(WCHAR)))
+    {
+        MessageBoxW(NULL, L"Skin successfully saved!\r\nIMPORTANT: Please restart Thetis if it is already open.", L"Skin Saved", MB_OK | MB_ICONINFORMATION);
+    }
+    else
+    {
+        MessageBoxW(hwnd, error, L"Error", MB_OK);
+    }
+
+    SetCursor(LoadCursorW(NULL, IDC_ARROW));
 }
 
-void
-OnCreate(HWND hwnd)
+void LoadSkin(ThetisSkin *pSkin)
 {
-  HFONT font;
-  HINSTANCE instance;
+    GetWindowTextW(txtSkinName, pSkin->skinName, THETIS_SKIN_NAME_MAX);
+    GetWindowTextW(cboBaseSkin, pSkin->baseSkin, MAX_PATH);
+    GetWindowTextW(txtFile, pSkin->filePath, THETIS_SKIN_NAME_MAX);
+}
 
-  instance = GetModuleHandle(NULL);
-  font = GetStockObject(DEFAULT_GUI_FONT);
+void OnReset(HWND hwnd)
+{
+    (void) hwnd;
 
-  CreateSkinNameControls(hwnd, font, instance);
-  CreateBaseSkinControls(hwnd, font, instance);
-  CreateBackgroundImageControls(hwnd, font, instance);
-  CreateActionControls(hwnd, font, instance);
-  CreateProgressControls(hwnd, font, instance);
+    SetDefaults();
 }
