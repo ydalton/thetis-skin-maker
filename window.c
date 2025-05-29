@@ -1,13 +1,10 @@
-#include <stdint.h>
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#include <shellapi.h>
 #include <shlwapi.h>
 #include <commctrl.h>
 #include <commdlg.h>
 
 #include <stdio.h>
-#include <assert.h>
 
 #include "resources.h"
 #include "thetisskinmaker.h"
@@ -38,33 +35,39 @@ HWND btnReset      = NULL;
 HWND lblFile       = NULL;
 
 static struct CreateWindowInfo child_controls[] = {
-    /* class        text                 style                                                    x    y    width  height hmenu,                hwnd           */
-    { WC_STATICW,   L"Skin name: ",      0,                                                       12,  12,  80,    13,    0,                    &lblSkinName   },
-    { WC_EDITW,     NULL,                WS_BORDER | WS_TABSTOP,                                  77,  9,   201,   20,    0,                    &txtSkinName   },
+    /* class        text                 style                                                        x    y    width  height hmenu,                hwnd           */
+    { WC_STATICW,   L"Skin name: ",      0,                                                           12,  12,  80,    13,    0,                    &lblSkinName   },
+    { WC_EDITW,     NULL,                WS_BORDER | WS_TABSTOP,                                      77,  9,   201,   20,    0,                    &txtSkinName   },
     { WC_COMBOBOXW, NULL,                CBS_DROPDOWNLIST | CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP, 77,  35,  201,   21,    0,                    &cboBaseSkin   },
-    { WC_STATICW,   L"Base skin: ",      0,                                                       12,  38,  56,    13,    0,                    &lblBaseSkin   },
-    { WC_BUTTONW,   L"Background image", BS_GROUPBOX,                                             15,  62,  264,   78,    0,                    &grpBackground },
-    { WC_BUTTONW,   L"Browse...",        BS_PUSHBUTTON | WS_TABSTOP,                              198, 78,  75,    23,    IDC_BROWSE_BUTTON,    &btnBrowse     },
-    { WC_EDITW,     NULL,                WS_BORDER | ES_READONLY,                                 77,  80,  114,   20,    0,                    &txtFile       },
-    { WC_BUTTONW,   L"Preview",          BS_PUSHBUTTON | WS_TABSTOP,                              198, 107, 75,    23,    IDC_PREVIEW_BUTTON,   &btnPreview    },
-    { WC_BUTTONW,   L"Reset",            BS_PUSHBUTTON | WS_TABSTOP,                              15,  150, 75,    23,    IDC_RESET_BUTTON,     &btnReset      },
-    { WC_BUTTONW,   L"Save",             BS_DEFPUSHBUTTON | WS_TABSTOP,                           204, 150, 75,    23,    IDC_SAVE_BUTTON,      &btnSave       },
-    { WC_STATICW,   L"File: ",           0,                                                       21,  83,  26,    13,    0,                    &lblFile       },
+    { WC_STATICW,   L"Base skin: ",      0,                                                           12,  38,  56,    13,    0,                    &lblBaseSkin   },
+    { WC_BUTTONW,   L"Background image", BS_GROUPBOX,                                                 15,  62,  264,   78,    0,                    &grpBackground },
+    { WC_BUTTONW,   L"Browse...",        BS_PUSHBUTTON | WS_TABSTOP,                                  198, 78,  75,    23,    IDC_BROWSE_BUTTON,    &btnBrowse     },
+    { WC_EDITW,     NULL,                WS_BORDER | ES_READONLY,                                     77,  80,  114,   20,    0,                    &txtFile       },
+    { WC_BUTTONW,   L"Preview",          BS_PUSHBUTTON | WS_TABSTOP,                                  198, 107, 75,    23,    IDC_PREVIEW_BUTTON,   &btnPreview    },
+    { WC_BUTTONW,   L"Reset",            BS_PUSHBUTTON | WS_TABSTOP,                                  15,  150, 75,    23,    IDC_RESET_BUTTON,     &btnReset      },
+    { WC_BUTTONW,   L"Save",             BS_DEFPUSHBUTTON | WS_TABSTOP,                               204, 150, 75,    23,    IDC_SAVE_BUTTON,      &btnSave       },
+    { WC_STATICW,   L"File: ",           0,                                                           21,  83,  26,    13,    0,                    &lblFile       },
 };
 
 void CreateControls(HWND hwndParent);
+void FillComboBoxBaseSkin(void);
 void SetDefaults(void);
 void SetControls(void);
 void LoadSkin(ThetisSkin *pSkin);
 
 void OnCreate(HWND hwndMain)
 {
+    SetCursor(LoadCursor(NULL, IDC_APPSTARTING));
+
     CreateControls(hwndMain);
+    FillComboBoxBaseSkin();
     SetDefaults();
     SetControls();
 
     /* focus the skin name textbox */
     SetFocus(txtSkinName);
+
+    SetCursor(LoadCursor(NULL, IDC_ARROW));
 }
 
 void CreateControls(HWND hwndParent)
@@ -100,10 +103,58 @@ void CreateControls(HWND hwndParent)
     }
 }
 
+void FillComboBoxBaseSkin(void)
+{
+    WIN32_FIND_DATAW data;
+    HANDLE file;
+    LPWSTR filename;
+    WCHAR expandedPath[MAX_PATH] = {0};
+    WCHAR wildcard[MAX_PATH] = {0};
+    WCHAR picdisplayPath[MAX_PATH] = {0};
+
+    ExpandEnvironmentStringsW(THETIS_SKIN_PATH, expandedPath, MAX_PATH);
+
+    /* ??? why does _ make all the difference? */
+    _snwprintf(wildcard, MAX_PATH, L"%s\\*", expandedPath);
+
+    file = FindFirstFileW(wildcard, &data);
+
+    /* get all files in the skin folder */
+    if(file != INVALID_HANDLE_VALUE)
+    {
+        do
+        {
+            filename = data.cFileName;
+            if(wcscmp(filename, L".") == 0 || wcscmp(filename, L"..") == 0)
+                continue;
+
+            _snwprintf(picdisplayPath,
+                MAX_PATH,
+                L"%s\\%s\\%s",
+                expandedPath,
+                filename,
+                THETIS_PICDISPLAY_PATH);
+
+            /* it's not a skin if it doesn't have at least the picdisplay file */
+            if(!PathFileExistsW(picdisplayPath))
+                continue;
+
+            SendMessage(cboBaseSkin, CB_ADDSTRING, 0, (LPARAM) filename);
+        }
+        while(FindNextFileW(file, &data));
+    }
+}
+
 void SetDefaults(void)
 {
     SetWindowTextW(txtSkinName, L"");
+    SendMessage(cboBaseSkin, CB_SETCURSEL, -1, 0);
     SetWindowTextW(txtFile, L"");
+    if (hbmpImage)
+    {
+        DeleteObject(hbmpImage);
+        hbmpImage = NULL;
+    }
     SetFocus(txtSkinName);
 }
 
@@ -188,4 +239,5 @@ void OnReset(HWND hwnd)
     (void) hwnd;
 
     SetDefaults();
+    SetControls();
 }

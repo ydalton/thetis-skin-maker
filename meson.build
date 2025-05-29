@@ -1,7 +1,7 @@
 project(
   'ThetisSkinMaker',
   'c',
-  version: 'v0.1.0-alpha',
+  version: 'v0.2.0',
   default_options: {
     'c_std': 'c89',
     'warning_level': '3',

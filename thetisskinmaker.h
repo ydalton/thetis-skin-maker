@@ -32,7 +32,7 @@ BOOL ThetisSkin_Save(ThetisSkin *pSkin, WCHAR *error, int max);
 
 extern HBITMAP hbmpImage;
 
-void OnPreviewClick(HWND hwnd);
+void OnPreview(HWND hwnd);
 void OnBrowse(HWND hwnd);
 void OnSave(HWND hwnd);
 void OnReset(HWND hwnd);

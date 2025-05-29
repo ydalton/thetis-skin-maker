@@ -14,12 +14,9 @@ ThetisSkinsExist(void)
 	BOOL shouldContinue = FALSE;
 	WCHAR expanded[MAX_PATH];
 
-	shouldContinue = ExpandEnvironmentStringsW(THETIS_SKIN_PATH, expanded, MAX_PATH);
+	ExpandEnvironmentStringsW(THETIS_SKIN_PATH, expanded, MAX_PATH);
 
-	if (shouldContinue)
-	{
-		shouldContinue = PathFileExistsW(expanded);
-	}
+	shouldContinue = PathFileExistsW(expanded);
 
 	return shouldContinue;
 }
@@ -88,7 +85,7 @@ WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
                         AboutDlgProc);
                     break;
                 case IDC_PREVIEW_BUTTON:
-                    OnPreviewClick(hwnd);
+                    OnPreview(hwnd);
                     break;
                 case IDC_BROWSE_BUTTON:
                     OnBrowse(hwnd);

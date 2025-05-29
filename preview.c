@@ -15,37 +15,32 @@ size_t bitmapWidth = 0, bitmapHeight = 0;
 
 ATOM wcPreview = 0;
 
-static void
-OnPreviewWindowCreate(HWND hwnd)
-{
-    HINSTANCE instance;
-    HWND image;
-
-    instance = GetModuleHandle(NULL);
-
-    image = CreateWindowExW(0,
-        WC_STATICW,
-        L"",
-        WS_CHILD | WS_VISIBLE | SS_BITMAP | SS_REALSIZECONTROL,
-        0,
-        0,
-        bitmapWidth,
-        bitmapHeight,
-        hwnd,
-        (HMENU) IDC_PREVIEW_STATIC_BITMAP,
-        instance,
-        NULL);
-
-    SendMessage(image, STM_SETIMAGE, (WPARAM) IMAGE_BITMAP, (LPARAM) hbmpImage);
-}
-
-static LRESULT CALLBACK
-PreviewWndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
+static LRESULT CALLBACK PreviewWndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
     switch(msg)
     {
         case WM_CREATE:
-            OnPreviewWindowCreate(hwnd);
+            {
+                HINSTANCE instance;
+                HWND image;
+
+                instance = GetModuleHandle(NULL);
+
+                image = CreateWindowExW(0,
+                    WC_STATICW,
+                    L"",
+                    WS_CHILD | WS_VISIBLE | SS_BITMAP | SS_REALSIZECONTROL,
+                    0,
+                    0,
+                    bitmapWidth,
+                    bitmapHeight,
+                    hwnd,
+                    (HMENU) IDC_PREVIEW_STATIC_BITMAP,
+                    instance,
+                    NULL);
+
+                SendMessage(image, STM_SETIMAGE, (WPARAM) IMAGE_BITMAP, (LPARAM) hbmpImage);
+            }
             break;
         case WM_SIZE:
             {
@@ -69,8 +64,7 @@ PreviewWndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
     return 0;
 }
 
-void
-OnPreviewClick(HWND hwnd)
+void OnPreview(HWND hwnd)
 {
     HINSTANCE instance;
     BITMAP bitmap;
