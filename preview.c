@@ -7,7 +7,7 @@
 #include "tsm.h"
 #include "rsrc.h"
 
-#define CLASS_NAME L"Win32ThetisSkinMakerPreview"
+#define CLASS_NAME L"ThetisSkinMakerPreviewClass"
 
 #define IMAGE_WIDTH 450
 
@@ -70,7 +70,7 @@ void OnPreview(HWND hwndParent)
     hwndPreview = CreateWindowExW(0,
                                   CLASS_NAME,
                                   L"Image preview",
-                                  WS_OVERLAPPEDWINDOW,
+                                  WS_OVERLAPPEDWINDOW & ~WS_MINIMIZEBOX,
                                   windowX,
                                   windowY,
                                   bitmapWidth,

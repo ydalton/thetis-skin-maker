@@ -34,20 +34,22 @@ HWND txtFile       = NULL;
 HWND btnPreview    = NULL;
 HWND btnReset      = NULL;
 HWND lblFile       = NULL;
+HWND stsStatus     = NULL;
 
 static struct CreateWindowInfo child_controls[] = {
-    /* extended style   class         text                 style                                                        x    y    width  height hmenu,                hwnd           */
-    { 0,                WC_STATICW,   L"Skin name: ",      0,                                                           12,  12,  80,    13,    0,                    &lblSkinName   },
-    { WS_EX_CLIENTEDGE, WC_EDITW,     NULL,                WS_TABSTOP,                                                  77,  9,   201,   20,    0,                    &txtSkinName   },
-    { WS_EX_CLIENTEDGE, WC_COMBOBOXW, NULL,                CBS_DROPDOWN | CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP,     77,  35,  201,   21,    0,                    &cboBaseSkin   },
-    { 0,                WC_STATICW,   L"Base skin: ",      0,                                                           12,  38,  56,    13,    0,                    &lblBaseSkin   },
-    { 0,                WC_BUTTONW,   L"Background image", BS_GROUPBOX,                                                 15,  62,  264,   78,    0,                    &grpBackground },
-    { 0,                WC_BUTTONW,   L"Browse...",        BS_PUSHBUTTON | WS_TABSTOP,                                  198, 78,  75,    23,    IDC_BROWSE_BUTTON,    &btnBrowse     },
-    { WS_EX_CLIENTEDGE, WC_EDITW,     NULL,                ES_READONLY,                                                 77,  80,  114,   20,    0,                    &txtFile       },
-    { 0,                WC_BUTTONW,   L"Preview",          BS_PUSHBUTTON | WS_TABSTOP,                                  198, 107, 75,    23,    IDC_PREVIEW_BUTTON,   &btnPreview    },
-    { 0,                WC_BUTTONW,   L"Reset",            BS_PUSHBUTTON | WS_TABSTOP,                                  15,  150, 75,    23,    IDC_RESET_BUTTON,     &btnReset      },
-    { 0,                WC_BUTTONW,   L"Save",             BS_DEFPUSHBUTTON | WS_TABSTOP,                               204, 150, 75,    23,    IDC_SAVE_BUTTON,      &btnSave       },
-    { 0,                WC_STATICW,   L"File: ",           0,                                                           27,  83,  26,    13,    0,                    &lblFile       },
+    /* extended style   class             text                 style                                                     x    y    width  height hmenu,                hwnd           */
+    { 0,                WC_STATICW,       L"Skin name: ",       0,                                                       12,  12,  80,    13,    0,                    &lblSkinName   },
+    { WS_EX_CLIENTEDGE, WC_EDITW,         NULL,                 WS_TABSTOP,                                              77,  9,   207,   20,    0,                    &txtSkinName   },
+    { WS_EX_CLIENTEDGE, WC_COMBOBOXW,     NULL,                 CBS_DROPDOWN | CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP, 77,  35,  207,   21,    0,                    &cboBaseSkin   },
+    { 0,                WC_STATICW,       L"Base skin: ",       0,                                                       12,  38,  56,    13,    0,                    &lblBaseSkin   },
+    { 0,                WC_BUTTONW,       L"Background image",  BS_GROUPBOX,                                             12,  62,  272,   78,    0,                    &grpBackground },
+    { 0,                WC_BUTTONW,       L"Browse...",         BS_PUSHBUTTON | WS_TABSTOP,                              198, 78,  75,    23,    IDC_BROWSE_BUTTON,    &btnBrowse     },
+    { WS_EX_CLIENTEDGE, WC_EDITW,         NULL,                 ES_READONLY,                                             77,  80,  114,   20,    0,                    &txtFile       },
+    { 0,                WC_BUTTONW,       L"Preview",           BS_PUSHBUTTON | WS_TABSTOP,                              198, 107, 75,    23,    IDC_PREVIEW_BUTTON,   &btnPreview    },
+    { 0,                WC_BUTTONW,       L"Reset",             BS_PUSHBUTTON | WS_TABSTOP,                              12,  150, 75,    23,    IDC_RESET_BUTTON,     &btnReset      },
+    { 0,                WC_BUTTONW,       L"Save",              BS_DEFPUSHBUTTON | WS_TABSTOP,                           209, 150, 75,    23,    IDC_SAVE_BUTTON,      &btnSave       },
+    { 0,                WC_STATICW,       L"File: ",            0,                                                       23,  83,  26,    13,    0,                    &lblFile       },
+    { 0,                STATUSCLASSNAMEW, L"Version: " VERSION, 0,                                                       0,   0,   0,     0,     0,                    &stsStatus     },
 };
 
 void CreateControls(HWND hwndParent);

@@ -8,7 +8,7 @@
 #define THETIS_SKIN_PATH L"%APPDATA%\\OpenHPSDR\\Skins"
 #define THETIS_PICDISPLAY_PATH L"Console\\picDisplay.png"
 
-#define WINDOW_NAME (L"ThetisSkinMaker " VERSION)
+#define WINDOW_NAME L"ThetisSkinMaker"
 
 #define ERROR_BOX(text) \
   MessageBoxW(NULL, text, WINDOW_NAME, MB_OK | MB_ICONERROR )

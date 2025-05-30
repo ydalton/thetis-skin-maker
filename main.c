@@ -7,8 +7,8 @@
 #include "rsrc.h"
 
 #define CLASS_NAME L"ThetisSkinMakerWndClass"
-#define WINDOW_WIDTH 300
-#define WINDOW_HEIGHT 240
+#define WINDOW_WIDTH 295
+#define WINDOW_HEIGHT 225
 
 BOOL g_thetisSkinsExist = FALSE;
 
@@ -22,6 +22,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, in
     MSG msg = {0};
     int screenWidth, screenHeight, windowX, windowY;
     HWND hwndMain = NULL;
+    RECT rect = {0};
 
     (void) prevInstance;
     (void) cmdLine;
@@ -53,6 +54,12 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, in
     screenWidth = GetSystemMetrics(SM_CXSCREEN);
     screenHeight = GetSystemMetrics(SM_CYSCREEN);
 
+    rect.right = WINDOW_WIDTH;
+    rect.bottom = WINDOW_HEIGHT;
+
+    /* get the normal size of the window, including window decorations */
+    AdjustWindowRectEx(&rect, WS_OVERLAPPEDWINDOW, FALSE, 0);
+
     windowX = (screenWidth/2) - (WINDOW_WIDTH/2);
     windowY = (screenHeight/2) - (WINDOW_HEIGHT/2);
 
@@ -60,10 +67,10 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, in
                                CLASS_NAME,
                                WINDOW_NAME,
                                WS_OVERLAPPEDWINDOW & ~WS_SIZEBOX & ~WS_MAXIMIZEBOX,
-                               windowX, /* x */
-                               windowY, /* y */
-                               WINDOW_WIDTH, /* width */
-                               WINDOW_HEIGHT, /* height */
+                               windowX,
+                               windowY,
+                               (rect.right - rect.left),
+                               (rect.bottom - rect.top),
                                NULL,
                                NULL,
                                instance,
