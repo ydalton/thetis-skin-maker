@@ -60,15 +60,16 @@ BOOL ThetisSkin_Save(ThetisSkin *pSkin, WCHAR *error, int max)
         WCHAR srcPath[MAX_PATH];
         WCHAR destPath[MAX_PATH];
         WCHAR picDisplayPath[MAX_PATH];
-        BOOL copySucceeded = FALSE;
+        int ret = 0;
 
         ExpandEnvironmentStringsW(THETIS_SKIN_PATH, expanded, MAX_PATH);
+
         _snwprintf(srcPath, MAX_PATH, L"%s\\%s", expanded, pSkin->baseSkin);
         _snwprintf(destPath, MAX_PATH, L"%s\\%s", expanded, pSkin->skinName);
         _snwprintf(picDisplayPath, MAX_PATH, L"%s\\%s", destPath, THETIS_PICDISPLAY_PATH);
 
-        copySucceeded = CopyFolderRecursively(srcPath, destPath);
-        if (copySucceeded)
+        ret = CopyFolderRecursively(srcPath, destPath);
+        if (ret == 0)
         {
             if (hbmpImage != NULL)
             {
@@ -78,7 +79,10 @@ BOOL ThetisSkin_Save(ThetisSkin *pSkin, WCHAR *error, int max)
         }
         else
         {
-            wcscat_s(error, max, L"Failed to copy folder for skin.");
+            WCHAR buf[64];
+
+            _snwprintf(buf, 64, L"Failed to copy folder for skin: error code %x.", ret);
+            wcscat_s(error, max, buf);
         }
     }
 
