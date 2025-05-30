@@ -10,6 +10,8 @@
 #define WINDOW_WIDTH 300
 #define WINDOW_HEIGHT 240
 
+BOOL g_thetisSkinsExist = FALSE;
+
 static BOOL ThetisSkinsExist(void);
 static LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
 static LRESULT CALLBACK AboutDlgProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
@@ -24,12 +26,14 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, in
     (void) prevInstance;
     (void) cmdLine;
 
-    if(!ThetisSkinsExist())
+    g_thetisSkinsExist = ThetisSkinsExist();
+
+    if(!g_thetisSkinsExist)
     {
-    	int ret = MessageBoxW(NULL,
-    			L"No existing Thetis skins were found. Do you wish to continue?",
-    			L"Skins Not Found",
-    			MB_YESNO | MB_ICONWARNING);
+        int ret = MessageBoxW(NULL,
+                              L"The Thetis skin folder could not be found. Do you wish to continue? Save functionality will be disabled.",
+                              L"Skins Not Found",
+                              MB_YESNO | MB_ICONWARNING);
 
     	if (ret == IDNO) {
     		return -1;

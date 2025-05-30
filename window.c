@@ -36,10 +36,10 @@ HWND btnReset      = NULL;
 HWND lblFile       = NULL;
 
 static struct CreateWindowInfo child_controls[] = {
-    /* extended style   class        text                 style                                                         x    y    width  height hmenu,                hwnd           */
+    /* extended style   class         text                 style                                                        x    y    width  height hmenu,                hwnd           */
     { 0,                WC_STATICW,   L"Skin name: ",      0,                                                           12,  12,  80,    13,    0,                    &lblSkinName   },
     { WS_EX_CLIENTEDGE, WC_EDITW,     NULL,                WS_TABSTOP,                                                  77,  9,   201,   20,    0,                    &txtSkinName   },
-    { 0,                WC_COMBOBOXW, NULL,                CBS_DROPDOWNLIST | CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP, 77,  35,  201,   21,    0,                    &cboBaseSkin   },
+    { WS_EX_CLIENTEDGE, WC_COMBOBOXW, NULL,                CBS_DROPDOWN | CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP,     77,  35,  201,   21,    0,                    &cboBaseSkin   },
     { 0,                WC_STATICW,   L"Base skin: ",      0,                                                           12,  38,  56,    13,    0,                    &lblBaseSkin   },
     { 0,                WC_BUTTONW,   L"Background image", BS_GROUPBOX,                                                 15,  62,  264,   78,    0,                    &grpBackground },
     { 0,                WC_BUTTONW,   L"Browse...",        BS_PUSHBUTTON | WS_TABSTOP,                                  198, 78,  75,    23,    IDC_BROWSE_BUTTON,    &btnBrowse     },
@@ -47,7 +47,7 @@ static struct CreateWindowInfo child_controls[] = {
     { 0,                WC_BUTTONW,   L"Preview",          BS_PUSHBUTTON | WS_TABSTOP,                                  198, 107, 75,    23,    IDC_PREVIEW_BUTTON,   &btnPreview    },
     { 0,                WC_BUTTONW,   L"Reset",            BS_PUSHBUTTON | WS_TABSTOP,                                  15,  150, 75,    23,    IDC_RESET_BUTTON,     &btnReset      },
     { 0,                WC_BUTTONW,   L"Save",             BS_DEFPUSHBUTTON | WS_TABSTOP,                               204, 150, 75,    23,    IDC_SAVE_BUTTON,      &btnSave       },
-    { 0,                WC_STATICW,   L"File: ",           0,                                                           21,  83,  26,    13,    0,                    &lblFile       },
+    { 0,                WC_STATICW,   L"File: ",           0,                                                           27,  83,  26,    13,    0,                    &lblFile       },
 };
 
 void CreateControls(HWND hwndParent);
@@ -164,16 +164,17 @@ void SetControls(void)
     WCHAR fileName[MAX_PATH] = L"";
     BOOL btnPreviewEnabled = FALSE;
 
+    /* check if image file path is set */
     GetWindowTextW(txtFile, fileName, MAX_PATH);
-
     if (wcscmp(fileName, L"") != 0)
     {
         btnPreviewEnabled = TRUE;
     }
 
     EnableWindow(btnPreview, btnPreviewEnabled);
+    /* disable the save button if no skins found */
+    EnableWindow(btnSave, g_thetisSkinsExist);
 }
-
 
 void OnBrowse(HWND hwnd)
 {
@@ -197,7 +198,8 @@ void OnBrowse(HWND hwnd)
         hbmpImage = CreateBitmapFromPath(fileName);
         if(hbmpImage)
         {
-            SetWindowTextW(txtFile, fileName);
+            /* get basename of filename */
+            SetWindowTextW(txtFile, PathFindFileName(fileName));
             SetControls();
         }
         else

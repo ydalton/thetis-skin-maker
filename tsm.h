@@ -15,6 +15,8 @@
 
 #define THETIS_SKIN_NAME_MAX    64
 
+extern BOOL g_thetisSkinsExist;
+
 typedef struct
 {
     WCHAR skinName[THETIS_SKIN_NAME_MAX];
