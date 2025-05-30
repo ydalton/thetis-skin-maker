@@ -64,7 +64,7 @@ err:
     GdipDisposeImage((GpImage *) gdiBmp);
     GdiplusShutdown(token);
 
-    return 0;
+    return ret;
 }
 
 static CLSID GetEncoderForFormat(LPWSTR format)

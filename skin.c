@@ -12,8 +12,6 @@
 
 BOOL ThetisSkin_IsValid(ThetisSkin *pSkin, WCHAR *error, int max)
 {
-    BOOL isValid = FALSE;
-
     if (wcscmp(pSkin->skinName, L"") == 0)
     {
         wcscat_s(error, max, L"- Please enter a skin name.\r\n");
@@ -49,9 +47,7 @@ BOOL ThetisSkin_IsValid(ThetisSkin *pSkin, WCHAR *error, int max)
         wcscat_s(error, max, L"- Please choose a background image.\r\n");
     }
 
-    isValid = wcslen(error) == 0;
-
-    return isValid;
+    return wcslen(error) == 0;
 }
 
 BOOL ThetisSkin_Save(ThetisSkin *pSkin, WCHAR *error, int max)
@@ -76,7 +72,7 @@ BOOL ThetisSkin_Save(ThetisSkin *pSkin, WCHAR *error, int max)
         {
             if (hbmpImage != NULL)
             {
-                SaveBitmapToFile(hbmpImage, picDisplayPath);
+                assert(SaveBitmapToFile(hbmpImage, picDisplayPath) == 0);
                 succeeded = TRUE;
             }
         }
