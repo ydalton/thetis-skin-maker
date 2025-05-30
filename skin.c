@@ -56,10 +56,10 @@ BOOL ThetisSkin_Save(ThetisSkin *pSkin, WCHAR *error, int max)
 
     if (ThetisSkin_IsValid(pSkin, error, max))
     {
-        WCHAR expanded[MAX_PATH];
-        WCHAR srcPath[MAX_PATH];
-        WCHAR destPath[MAX_PATH];
-        WCHAR picDisplayPath[MAX_PATH];
+        WCHAR expanded[MAX_PATH] = {0};
+        WCHAR srcPath[MAX_PATH] = {0};
+        WCHAR destPath[MAX_PATH] = {0};
+        WCHAR picDisplayPath[MAX_PATH] = {0};
         int ret = 0;
 
         ExpandEnvironmentStringsW(THETIS_SKIN_PATH, expanded, MAX_PATH);

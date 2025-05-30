@@ -1,6 +1,8 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <shellapi.h>
+#include <stdlib.h>
+#include <assert.h>
 
 static const WCHAR WIN32_INVALID_CHARS[] = L"<>:\"/\\|?*";
 static const WCHAR* WIN32_RESERVED_NAMES[] = {
@@ -45,4 +47,25 @@ int CopyFolderRecursively(LPWSTR src, LPWSTR dest)
     s.pTo = dest;
 
     return SHFileOperationW(&s);
+}
+
+LPWSTR GetDropDownItem(HWND hComboBox)
+{
+    LPWSTR string = NULL;
+    int index, length;
+
+    /* get currently selected index */
+    index = SendMessage(hComboBox, CB_GETCURSEL, 0, 0);
+
+    if(index != CB_ERR)
+    {
+        /* get length of currently selected item */
+        length = SendMessage(hComboBox, CB_GETLBTEXTLEN, index, 0);
+        assert(length != CB_ERR);
+
+        string = malloc((length + 1) * sizeof(TCHAR));
+        SendMessage(hComboBox, CB_GETLBTEXT, index, (LPARAM) string);
+    }
+
+    return string;
 }

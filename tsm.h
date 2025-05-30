@@ -42,5 +42,6 @@ int SaveBitmapToFile(HBITMAP bitmap, LPWSTR path);
 /* utilities */
 int CopyFolderRecursively(LPWSTR src, LPWSTR dest);
 BOOL FileNameIsValid(LPWSTR name);
+LPWSTR GetDropDownItem(HWND hComboBox);
 
 #endif /* _TSM_H_ */
