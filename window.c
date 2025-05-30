@@ -6,8 +6,8 @@
 
 #include <stdio.h>
 
-#include "resources.h"
-#include "thetisskinmaker.h"
+#include "rsrc.h"
+#include "tsm.h"
 
 struct CreateWindowInfo
 {

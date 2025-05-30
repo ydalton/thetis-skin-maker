@@ -7,10 +7,8 @@
 #include <assert.h>
 #include <shlwapi.h>
 #include <shellapi.h>
-#include "thetisskinmaker.h"
 
-int CopyFolderRecursively(LPWSTR src, LPWSTR dest);
-BOOL FileNameIsValid(LPWSTR name);
+#include "tsm.h"
 
 BOOL ThetisSkin_IsValid(ThetisSkin *pSkin, WCHAR *error, int max)
 {
@@ -56,25 +54,6 @@ BOOL ThetisSkin_IsValid(ThetisSkin *pSkin, WCHAR *error, int max)
     return isValid;
 }
 
-BOOL FileNameIsValid(LPWSTR name)
-{
-    BOOL isValid = FALSE;
-
-    HANDLE file = CreateFileW(name, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_FLAG_DELETE_ON_CLOSE, NULL);
-
-    if (file != INVALID_HANDLE_VALUE)
-    {
-        CloseHandle(file);
-        isValid = TRUE;
-    }
-    else
-    {
-        assert(GetLastError() == ERROR_INVALID_NAME);
-    }
-
-    return isValid;
-}
-
 BOOL ThetisSkin_Save(ThetisSkin *pSkin, WCHAR *error, int max)
 {
     BOOL succeeded = FALSE;
@@ -108,16 +87,4 @@ BOOL ThetisSkin_Save(ThetisSkin *pSkin, WCHAR *error, int max)
     }
 
     return succeeded;
-}
-
-int CopyFolderRecursively(LPWSTR src, LPWSTR dest)
-{
-    SHFILEOPSTRUCTW s = {0};
-
-    s.wFunc = FO_COPY;
-    s.fFlags = FOF_SILENT;
-    s.pFrom = src;
-    s.pTo = dest;
-
-    return SHFileOperationW(&s);
 }

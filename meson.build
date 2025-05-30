@@ -18,6 +18,7 @@ win32skinmaker_sources = files(
   'main.c',
   'preview.c',
   'skin.c',
+  'util.c',
   'window.c',
 )
 
@@ -27,7 +28,7 @@ win32skinmaker_deps = [
 ]
 
 win32skinmaker_sources += windows.compile_resources(
-  'resources.rc',
+  'tsm.rc',
   args: [
     # windres seems to have a bug, this seems to fix it
     '--use-temp-file',
@@ -40,6 +41,7 @@ executable(
   win32skinmaker_sources,
   dependencies: win32skinmaker_deps,
   c_args: [
+    '-DVERSION="' + meson.project_version() + '"',
     '-DUNICODE',
     '-D_UNICODE',
   ],

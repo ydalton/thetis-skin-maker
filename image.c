@@ -5,9 +5,12 @@
 
 #include <assert.h>
 
-#include "thetisskinmaker.h"
+#include "tsm.h"
 
 CLSID g_clsidPngEncoder = {0};
+static CLSID GetEncoderForFormat(LPWSTR format);
+
+#define PNG_MIMETYPE            L"image/png"
 
 HBITMAP CreateBitmapFromPath(LPWSTR path)
 {
@@ -31,6 +34,37 @@ HBITMAP CreateBitmapFromPath(LPWSTR path)
     GdiplusShutdown(token);
 
     return bitmap;
+}
+
+int SaveBitmapToFile(HBITMAP bitmap, LPWSTR path)
+{
+    GdiplusStartupInput startup = {0};
+    ULONG_PTR token;
+    GpBitmap *gdiBmp;
+    int ret = 0;
+
+    startup.GdiplusVersion = 1;
+
+    ret = GdiplusStartup(&token, &startup, NULL);
+    /* you better work if we already loaded the image */
+    assert(ret == 0);
+    ret = GdipCreateBitmapFromHBITMAP(bitmap, NULL, &gdiBmp);
+    if(ret != 0)
+        goto err;
+
+    if(IsEqualCLSID(&g_clsidPngEncoder, &CLSID_NULL))
+        /* we will always have to use PNG */
+        g_clsidPngEncoder = GetEncoderForFormat(PNG_MIMETYPE);
+
+    assert(!IsEqualCLSID(&g_clsidPngEncoder, &CLSID_NULL));
+
+    ret = GdipSaveImageToFile(gdiBmp, path, &g_clsidPngEncoder, NULL);
+
+err:
+    GdipDisposeImage((GpImage *) gdiBmp);
+    GdiplusShutdown(token);
+
+    return 0;
 }
 
 static CLSID GetEncoderForFormat(LPWSTR format)
@@ -57,36 +91,4 @@ static CLSID GetEncoderForFormat(LPWSTR format)
     }
 
     return clsidEncoder;
-}
-
-
-int SaveBitmapToFile(HBITMAP bitmap, LPWSTR path)
-{
-    GdiplusStartupInput startup = {0};
-    ULONG_PTR token;
-    GpBitmap *gdiBmp;
-    int ret = 0;
-
-    startup.GdiplusVersion = 1;
-
-    ret = GdiplusStartup(&token, &startup, NULL);
-    /* you better work if we already loaded the image */
-    assert(ret == 0);
-    ret = GdipCreateBitmapFromHBITMAP(bitmap, NULL, &gdiBmp);
-    if(ret != 0)
-        goto err;
-
-    if(IsEqualCLSID(&g_clsidPngEncoder, &CLSID_NULL))
-        /* we will always have to use PNG */
-        g_clsidPngEncoder = GetEncoderForFormat(L"image/png");
-
-    assert(!IsEqualCLSID(&g_clsidPngEncoder, &CLSID_NULL));
-
-    ret = GdipSaveImageToFile(gdiBmp, path, &g_clsidPngEncoder, NULL);
-
-err:
-    GdipDisposeImage((GpImage *) gdiBmp);
-    GdiplusShutdown(token);
-
-    return 0;
 }

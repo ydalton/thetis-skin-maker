@@ -4,67 +4,19 @@
 
 #include <assert.h>
 
-#include "thetisskinmaker.h"
-#include "resources.h"
+#include "tsm.h"
+#include "rsrc.h"
 
 #define CLASS_NAME L"Win32ThetisSkinMakerPreview"
 
 #define IMAGE_WIDTH 450
 
 size_t bitmapWidth = 0, bitmapHeight = 0;
-
 ATOM wcPreview = 0;
 
-static LRESULT CALLBACK PreviewWndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
-{
-    switch(msg)
-    {
-        case WM_CREATE:
-            {
-                HINSTANCE instance;
-                HWND image;
+static LRESULT CALLBACK PreviewWndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
 
-                instance = GetModuleHandle(NULL);
-
-                image = CreateWindowExW(0,
-                    WC_STATICW,
-                    L"",
-                    WS_CHILD | WS_VISIBLE | SS_BITMAP | SS_REALSIZECONTROL,
-                    0,
-                    0,
-                    bitmapWidth,
-                    bitmapHeight,
-                    hwnd,
-                    (HMENU) IDC_PREVIEW_STATIC_BITMAP,
-                    instance,
-                    NULL);
-
-                SendMessage(image, STM_SETIMAGE, (WPARAM) IMAGE_BITMAP, (LPARAM) hbmpImage);
-            }
-            break;
-        case WM_SIZE:
-            {
-                HWND hwndStaticBitmap;
-
-                hwndStaticBitmap = GetDlgItem(hwnd, IDC_PREVIEW_STATIC_BITMAP);
-                assert(hwndStaticBitmap != NULL);
-
-                SetWindowPos(hwndStaticBitmap,
-                    NULL,
-                    0,
-                    0,
-                    LOWORD(lparam),
-                    HIWORD(lparam),
-                    0);
-            }
-            break;
-        default:
-            return DefWindowProc(hwnd, msg, wparam, lparam);
-    }
-    return 0;
-}
-
-void OnPreview(HWND hwnd)
+void OnPreview(HWND hwndParent)
 {
     HINSTANCE instance;
     BITMAP bitmap;
@@ -116,10 +68,59 @@ void OnPreview(HWND hwnd)
                                   CW_USEDEFAULT,
                                   bitmapWidth,
                                   bitmapHeight,
-                                  hwnd,
+                                  hwndParent,
                                   NULL,
                                   instance,
                                   NULL);
 
     ShowWindow(hwndPreview, SW_NORMAL);
+}
+
+static LRESULT CALLBACK PreviewWndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
+{
+    switch(msg)
+    {
+        case WM_CREATE:
+            {
+                HINSTANCE instance;
+                HWND image;
+
+                instance = GetModuleHandle(NULL);
+
+                image = CreateWindowExW(0,
+                    WC_STATICW,
+                    L"",
+                    WS_CHILD | WS_VISIBLE | SS_BITMAP | SS_REALSIZECONTROL,
+                    0,
+                    0,
+                    bitmapWidth,
+                    bitmapHeight,
+                    hwnd,
+                    (HMENU) IDC_PREVIEW_STATIC_BITMAP,
+                    instance,
+                    NULL);
+
+                SendMessage(image, STM_SETIMAGE, (WPARAM) IMAGE_BITMAP, (LPARAM) hbmpImage);
+            }
+            break;
+        case WM_SIZE:
+            {
+                HWND hwndStaticBitmap;
+
+                hwndStaticBitmap = GetDlgItem(hwnd, IDC_PREVIEW_STATIC_BITMAP);
+                assert(hwndStaticBitmap != NULL);
+
+                SetWindowPos(hwndStaticBitmap,
+                    NULL,
+                    0,
+                    0,
+                    LOWORD(lparam),
+                    HIWORD(lparam),
+                    0);
+            }
+            break;
+        default:
+            return DefWindowProc(hwnd, msg, wparam, lparam);
+    }
+    return 0;
 }

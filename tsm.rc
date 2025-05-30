@@ -1,4 +1,4 @@
-#include "resources.h"
+#include "rsrc.h"
 
 IDR_MAINMENU MENU
 BEGIN
@@ -24,4 +24,4 @@ END
 
 ID_ICON ICON tsm.ico
 
-1 RT_MANIFEST win32skinmaker.xml
+1 RT_MANIFEST tsm.xml
