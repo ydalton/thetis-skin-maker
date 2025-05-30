@@ -22,6 +22,7 @@ void OnPreview(HWND hwndParent)
     BITMAP bitmap;
     HWND hwndPreview;
     RECT rect = {0};
+    int screenWidth, screenHeight, windowX, windowY;
     float ratio, new_height;
 
     instance = GetModuleHandle(NULL);
@@ -60,12 +61,18 @@ void OnPreview(HWND hwndParent)
     bitmapWidth = rect.right - rect.left;
     bitmapHeight = rect.bottom - rect.top;
 
+    screenWidth = GetSystemMetrics(SM_CXSCREEN);
+    screenHeight = GetSystemMetrics(SM_CYSCREEN);
+
+    windowX = (screenWidth/2) - (bitmapWidth/2);
+    windowY = (screenHeight/2) - (bitmapHeight/2);
+
     hwndPreview = CreateWindowExW(0,
                                   CLASS_NAME,
                                   L"Image preview",
                                   WS_OVERLAPPEDWINDOW,
-                                  CW_USEDEFAULT,
-                                  CW_USEDEFAULT,
+                                  windowX,
+                                  windowY,
                                   bitmapWidth,
                                   bitmapHeight,
                                   hwndParent,
