@@ -239,7 +239,7 @@ void LoadSkin(ThetisSkin *pSkin)
     GetWindowTextW(txtSkinName, pSkin->skinName, THETIS_SKIN_NAME_MAX);
     if (baseSkin != NULL)
     {
-        wcscpy(pSkin->baseSkin, baseSkin);
+        wcsncpy(pSkin->baseSkin, baseSkin, sizeof(pSkin->baseSkin)/sizeof(WCHAR));
         free(baseSkin);
     }
     GetWindowTextW(txtFile, pSkin->filePath, THETIS_SKIN_NAME_MAX);
