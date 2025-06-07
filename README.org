@@ -5,7 +5,7 @@ A program to create skins for OpenHPSDR Thetis.
 
 ** Requirements
 - Meson
-- MinGW toolchain (MSVC is not supported)
+- MinGW toolchain (compiling with Visual C++ is not supported)
 
 Meson and the MinGW toolchain can be installed using MSYS2 on Windows.
 
